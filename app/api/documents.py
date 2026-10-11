@@ -8,12 +8,14 @@ from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Up
 from loguru import logger
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api.auth import CurrentUser
 from app.config import settings
 from app.database import get_db
 from app.models import Document, DocumentChunk, KnowledgeBase, User
+from app.parsers.document_loader import DocumentParseError, parse_document_record
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -87,8 +89,19 @@ def build_storage_path(user_id: UUID, document_id: UUID, filename: str) -> Path:
 
 
 def enqueue_document_processing(document_id: UUID) -> None:
-    """占位触发文档处理链，后续解析模块会接入真实处理。"""
+    """触发文档解析处理链，失败时写入 parse_error。"""
+    from app.database import get_session_factory
+
     logger.bind(event="document_processing_enqueued", document_id=str(document_id)).info("document processing enqueued")
+    session_factory = get_session_factory()
+    with session_factory() as session:
+        try:
+            parse_document_record(session, document_id)
+        except DocumentParseError:
+            return
+        except SQLAlchemyError as error:
+            logger.bind(event="document_processing_failed", document_id=str(document_id)).warning(str(error))
+            return
 
 
 def save_upload_file(file: UploadFile, content: bytes, db: Session, user: User, background_tasks: BackgroundTasks) -> Document:
