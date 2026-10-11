@@ -13,7 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.auth import CurrentUser
-from app.database import get_db
+from app.core.database import get_db
 from app.models import KnowledgeBase, QAMessage
 from app.services.citations import CitationError, map_citations, persist_citations
 from app.services.generation import AnswerGenerator, GenerationResult, NO_EVIDENCE_ANSWER
