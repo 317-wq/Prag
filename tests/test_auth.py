@@ -72,6 +72,37 @@ def test_duplicate_email_and_invalid_login_are_rejected():
     assert "password" not in invalid.text.lower()
 
 
+def test_change_password_succeeds_and_old_password_is_rejected():
+    """认证用户可以修改密码，旧密码和不合规新密码会被拒绝。"""
+    client, _, _ = create_test_client()
+    with client:
+        payload = {"email": f"{uuid4()}@example.com", "password": "password-123"}
+        registration = client.post("/auth/register", json=payload)
+        token = registration.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+        changed = client.put(
+            "/auth/password",
+            headers=headers,
+            json={"current_password": "password-123", "new_password": "new-password-456"},
+        )
+        wrong_old = client.put(
+            "/auth/password",
+            headers=headers,
+            json={"current_password": "password-123", "new_password": "another-password"},
+        )
+        short_new = client.put(
+            "/auth/password",
+            headers=headers,
+            json={"current_password": "new-password-456", "new_password": "short"},
+        )
+        new_login = client.post("/auth/login", json={**payload, "password": "new-password-456"})
+
+    assert changed.status_code == 200
+    assert wrong_old.status_code == 400
+    assert short_new.status_code == 422
+    assert new_login.status_code == 200
+
+
 def test_login_logout_and_authenticated_dependency():
     """登录返回 JWT，认证接口可访问，退出接口要求有效认证。"""
     client, _, _ = create_test_client()
