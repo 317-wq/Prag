@@ -45,4 +45,8 @@ def test_frontend_index_is_served():
         response = client.get("/")
 
     assert response.status_code == 200
-    assert "Prag 知识库" in response.text
+    assert "Prag" in response.text
+    assert 'id="auth-form"' in response.text
+    assert 'data-view="chat"' in response.text
+    assert 'data-view="documents"' in response.text
+    assert 'data-view="settings"' in response.text
