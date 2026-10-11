@@ -142,12 +142,10 @@ frontend/            原生 HTML / CSS / JS
     ↓ Fetch API
 app/api/             HTTP 路由层
     ↓
-app/services/        业务编排
-    ↓
-app/core/            解析、切片、索引、检索、生成
-    ↓
-app/repositories/    数据访问（PostgreSQL + pgvector）
-    ↓
+app/services/        向量化、检索、生成与引用
+    ├── app/parsers/  文档解析与文本切片
+    └── app/core/     配置、数据库、日志等基础设施
+                       ↓
 data/                上传文件、日志
 ```
 
@@ -157,24 +155,27 @@ data/                上传文件、日志
 Prag/
 ├── app/
 │   ├── main.py
-│   ├── config.py
+│   ├── core/
+│   │   ├── config.py
+│   │   ├── database.py
+│   │   └── logging.py
 │   ├── api/
 │   │   ├── health.py
 │   │   ├── auth.py
 │   │   ├── documents.py
 │   │   └── chat.py
-│   ├── core/
-│   │   ├── loaders.py
-│   │   ├── cleaner.py
-│   │   ├── splitter.py
-│   │   ├── embedder.py
-│   │   ├── indexer.py
-│   │   ├── retriever.py
-│   │   ├── prompt.py
-│   │   └── generator.py
 │   ├── models/
-│   ├── repositories/
+│   │   ├── __init__.py
+│   │   └── entities.py
+│   ├── parsers/
+│   │   ├── document_loader.py
+│   │   ├── schemas.py
+│   │   └── text_chunker.py
 │   └── services/
+│       ├── citations.py
+│       ├── embedding.py
+│       ├── generation.py
+│       └── retrieval.py
 ├── frontend/
 │   ├── index.html
 │   ├── documents.html
@@ -194,8 +195,8 @@ Prag/
 ```
 
 - [x] 创建基础目录结构
-- [ ] 确认各层职责边界
-- [ ] 确认前端静态资源由 FastAPI 托管
+- [x] 确认各层职责边界
+- [x] 确认前端静态资源由 FastAPI 托管
 - [x] 创建 `data/logs/` 目录，确认不会被提交到 Git
 
 ---
@@ -230,26 +231,26 @@ uploaded → parsing → indexing → ready
 
 - [x] `email` 使用 CITEXT 或统一转小写
 - [x] `password_hash` 使用 bcrypt
-- [ ] `domain_label` 统一小写，V1 固定 `general`
+- [x] `domain_label` 统一小写，V1 固定 `general`
 - [x] `embedding` 保持 `VECTOR(1024)`，换模型时重建列
-- [ ] 文档重新处理时，先删旧 chunk 再写新 chunk
+- [x] 文档重新处理时，先删旧 chunk 再写新 chunk
 
 ### 5.4 日志约定
 
-使用 Loguru 作为日志库，通过 `serialize=True` 输出 JSON 格式，文件写入 `data/logs/app.log`。
+使用 Loguru 作为日志库，控制台和文件统一输出紧凑文本格式，文件写入 `data/logs/app.log`。时间精度为年月日时分秒，消息超过 200 个字符时截断。
 
 日志字段约定：
 
 - `event`：事件类型，如 `document_upload`、`retrieval`、`llm_call`
 - `request_id`：请求唯一标识，通过 `logger.bind()` 注入
 - `user_id`：当前用户 ID
-- `duration_ms`：耗时，单位毫秒
+- `duration_ms`：内部耗时字段，单位毫秒；紧凑输出按需省略
 - `status`：success / failed
 
 - [x] 配置 Loguru 输出到 `data/logs/app.log`
 - [x] 用 InterceptHandler 桥接标准库日志（Uvicorn、SQLAlchemy）
 - [x] 敏感信息（API Key、密码）不写入日志
-- [x] 定义日志字段和格式
+- [x] 定义日志字段和紧凑文本格式
 - [x] 定义日志级别使用规则（INFO 正常操作，WARNING 可恢复异常，ERROR 不可恢复失败）
 
 ---
