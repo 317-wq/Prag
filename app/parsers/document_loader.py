@@ -126,6 +126,9 @@ def parse_document_record(db: Session, document_id) -> ParseResult:
     if document is None:
         raise DocumentParseError("文档不存在")
     loader = DocumentLoader()
+    document.status = "parsing"
+    document.parse_error = None
+    db.commit()
     try:
         result = loader.parse(Path(document.storage_path), document.file_type)
     except DocumentParseError as error:
@@ -147,9 +150,12 @@ def parse_document_record(db: Session, document_id) -> ParseResult:
                 content=chunk.content,
                 parent_content=chunk.parent_content,
                 token_count=len(chunk.content),
+                page_number=chunk.metadata.get("page"),
+                section_title=chunk.metadata.get("section"),
+                line_number=chunk.metadata.get("line"),
             )
         )
-    document.status = "parsed"
+    document.status = "indexing"
     document.parse_error = None
     db.commit()
     logger.bind(
