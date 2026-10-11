@@ -258,7 +258,7 @@ uploaded → parsing → indexing → ready
 
 ### 6.1 基础配置与应用启动
 
-- [x] 实现配置加载（`app/config.py`）
+- [x] 实现配置加载（`app/core/config.py`）
 - [x] 实现必填环境变量校验
 - [x] 实现 FastAPI 应用入口（`app/main.py`）
 - [x] 配置统一异常处理
