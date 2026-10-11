@@ -95,39 +95,39 @@
 
 #### Embedding（阿里云百炼）
 
-- [ ] 创建百炼 API Key
-- [ ] 确认 `QWEN_BASE_URL` 可用
+- [x] 创建百炼 API Key
+- [x] 确认 `QWEN_BASE_URL` 可用
 - [x] 确认 `qwen3.7-text-embedding` 模型名
 - [x] 配置 `QWEN_EMBEDDING_MODEL_FLASH`，作为主向量模型不可用时的兜底模型
 - [x] 确认 `qwen3.7-text-embedding` 与 `qwen3.7-text-embedding-flash` 均可用，返回向量维度均为 1024
 - [x] 确认返回向量维度为 1024
-- [ ] 编写连通性检查脚本，验证中英文文本均可向量化
+- [x] 编写连通性检查脚本，验证中英文文本均可向量化
 
 #### LLM（OpenAI 兼容中转站）
 
-- [ ] 配置 `GPT_API_KEY`、`GPT_BASE_URL`、`GPT_CHAT_MODEL`
-- [ ] 编写连通性检查
-- [ ] 验证 LLM 能严格依据给定上下文回答
+- [x] 配置 `GPT_API_KEY`、`GPT_BASE_URL`、`GPT_CHAT_MODEL`
+- [x] 编写连通性检查
+- [x] 验证 LLM 能严格依据给定上下文回答
 
 #### 在线搜索（V2）
 
-- [ ] 创建 Tavily API Key
-- [ ] V1 阶段保持 `ONLINE_SEARCH_ENABLED=false`
+- [x] 创建 Tavily API Key
+- [x] V1 阶段保持 `ONLINE_SEARCH_ENABLED=false`
 
 ### 3.4 数据库与存储
 
-- [ ] 确认 Docker Compose 使用 `pgvector/pgvector:pg16` 镜像
-- [ ] 编写 `init.sql`，包含 `CREATE EXTENSION vector / citext / pgcrypto`
-- [ ] 编写所有业务表建表语句
-- [ ] 挂载 `init.sql` 到 `/docker-entrypoint-initdb.d/`
-- [ ] 配置 PostgreSQL 数据卷持久化
-- [ ] 配置上传文件目录挂载
-- [ ] 验证容器重启后数据不丢失
+- [x] 确认 Docker Compose 使用 `pgvector/pgvector:pg16` 镜像
+- [x] 编写 `init.sql`，包含 `CREATE EXTENSION vector / citext / pgcrypto`
+- [x] 编写所有业务表建表语句
+- [x] 挂载 `init.sql` 到 `/docker-entrypoint-initdb.d/`
+- [x] 配置 PostgreSQL 数据卷持久化
+- [x] 配置上传文件目录挂载
+- [x] 验证容器重启后数据不丢失
 
 ### 3.5 环境变量清单
 
-- [ ] 创建 `.env.example`，包含全部配置项，密钥留空
-- [ ] 创建本地 `.env`，填入真实密钥，确认不提交 Git
+- [x] 创建 `.env.example`，包含全部配置项，密钥留空
+- [x] 创建本地 `.env`，填入真实密钥，确认不提交 Git
 - [ ] 启动时校验必填配置
 - [ ] 敏感配置在日志中脱敏
 
@@ -193,10 +193,10 @@ Prag/
 └── .gitignore
 ```
 
-- [ ] 创建基础目录结构
+- [x] 创建基础目录结构
 - [ ] 确认各层职责边界
 - [ ] 确认前端静态资源由 FastAPI 托管
-- [ ] 创建 `data/logs/` 目录，确认不会被提交到 Git
+- [x] 创建 `data/logs/` 目录，确认不会被提交到 Git
 
 ---
 
@@ -513,17 +513,18 @@ uploaded → parsing → indexing → ready
 ## 10. 每次开发任务的完成记录
 
 ```markdown
-### 依赖环境与空项目启动测试
+### 基础目录结构配置
 
-- [√] 依赖安装已完成
-- [√] 空项目启动测试已完成
-- [√] 关键依赖导入已验证
-- [√] `/health` 接口已验证
+- [√] 创建 `app/`、`frontend/`、`data/`、`tests/` 目录及规划中的子目录
+- [√] 创建 `data/logs/` 和 `data/uploads/`
+- [√] 确认 `data/` 不会被提交到 Git
+- [ ] 各层职责边界（待应用代码实现后确认）
+- [ ] FastAPI 托管前端静态资源（待 FastAPI 应用实现后确认）
 
 实现说明：
-- 修改文件：`requirements.txt`、`spec.md`
-- 测试命令：使用 `.venv\\Scripts\\python.exe` 启动临时 FastAPI/Uvicorn 应用并请求 `/health`
-- 测试结果：启动成功，`/health` 返回 HTTP 200；清单中的直接依赖均可导入
-- 已知问题：无
+- 修改文件：`spec.md`
+- 新增目录：`app/`、`frontend/`、`data/`、`tests/`
+- 验证结果：`data/logs/` 和 `data/uploads/` 均被 `.gitignore` 忽略
+- 未完成项：当前尚无应用源码，无法验证职责边界和静态资源托管
 - 完成日期：2026-10-10
 ```
