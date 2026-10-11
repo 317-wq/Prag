@@ -130,11 +130,13 @@ def test_parse_document_record_writes_chunks(tmp_path):
         parse_document_record(session, document.id)
         chunks = list(session.scalars(select(DocumentChunk).where(DocumentChunk.document_id == document.id).order_by(DocumentChunk.chunk_index)))
         session.refresh(document)
-        assert document.status == "parsed"
+        assert document.status == "indexing"
         assert len(chunks) == 1
         assert chunks[0].document_id == document.id
         assert chunks[0].chunk_index == 0
         assert chunks[0].parent_content == "标题：标题"
+        assert chunks[0].section_title == "标题"
+        assert chunks[0].line_number == 1
         assert chunks[0].content == "# 标题\n第一段\n\n第二段"
 
 
