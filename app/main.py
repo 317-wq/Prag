@@ -1,7 +1,5 @@
-"""FastAPI 应用入口、统一异常处理、请求 ID 和结构化日志配置。"""
+"""FastAPI 应用入口、统一异常处理和请求 ID 管理。"""
 
-import logging
-import sys
 import time
 import uuid
 from contextlib import asynccontextmanager
@@ -19,15 +17,8 @@ from app.api.auth import router as auth_router
 from app.api.chat import router as chat_router
 from app.api.documents import router as documents_router
 from app.api.health import router as health_router
-from app.config import ConfigurationError, settings
-
-
-class InterceptHandler(logging.Handler):
-    """将标准库日志转发到 Loguru。"""
-
-    def emit(self, record: logging.LogRecord) -> None:
-        """转发一条标准库日志记录。"""
-        logger.opt(exception=record.exc_info).log(record.levelname, record.getMessage())
+from app.core.config import ConfigurationError, settings
+from app.core.logging import configure_logging
 
 
 class RequestContextMiddleware(BaseHTTPMiddleware):
@@ -60,26 +51,6 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             duration_ms=duration_ms,
         )
         return response
-
-
-def configure_logging() -> None:
-    """配置 Loguru JSON 文件日志，并桥接 Uvicorn 等标准库日志。"""
-    settings.prepare_directories()
-    logger.remove()
-    logger.add(sys.stderr, level=settings.log_level, enqueue=True)
-    logger.add(
-        settings.log_path,
-        level=settings.log_level,
-        serialize=True,
-        encoding="utf-8",
-        enqueue=True,
-        rotation="10 MB",
-        retention="14 days",
-    )
-    logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
-    for logger_name in ("uvicorn", "uvicorn.error", "uvicorn.access", "sqlalchemy.engine"):
-        logging.getLogger(logger_name).handlers = [InterceptHandler()]
-        logging.getLogger(logger_name).propagate = False
 
 
 def create_app() -> FastAPI:
