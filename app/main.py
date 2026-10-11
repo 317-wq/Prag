@@ -15,9 +15,10 @@ from starlette.staticfiles import StaticFiles
 
 from app.api.auth import router as auth_router
 from app.api.chat import router as chat_router
-from app.api.documents import router as documents_router
+from app.api.documents import recover_unfinished_documents, router as documents_router
 from app.api.health import router as health_router
 from app.core.config import ConfigurationError, settings
+from app.core.database import ensure_schema_compatibility
 from app.core.logging import configure_logging
 
 
@@ -59,7 +60,10 @@ def create_app() -> FastAPI:
     async def lifespan(_: FastAPI):
         """在应用启动和关闭时执行基础生命周期逻辑。"""
         settings.validate_required()
+        settings.prepare_directories()
         configure_logging()
+        ensure_schema_compatibility()
+        recover_unfinished_documents()
         logger.bind(event="application_startup", status="success").info("application started")
         yield
         logger.bind(event="application_shutdown", status="success").info("application stopped")
