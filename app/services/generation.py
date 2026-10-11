@@ -9,7 +9,7 @@ from typing import Any
 from loguru import logger
 from openai import OpenAI
 
-from app.config import settings
+from app.core.config import settings
 from app.services.retrieval import RetrievalItem
 
 NO_EVIDENCE_ANSWER = "文档中没有足够依据"
