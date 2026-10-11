@@ -282,22 +282,22 @@ uploaded → parsing → indexing → ready
 
 ### 6.3 文件上传与文档管理
 
-- [ ] 实现单文件上传
-- [ ] 实现批量上传
-- [ ] 校验扩展名白名单：md、pdf、doc、docx、txt
-- [ ] 校验文件大小 ≤ 20MB
-- [ ] 校验文件内容不为空
-- [ ] 文件名安全处理
-- [ ] 保存原始文件到 `UPLOAD_DIR`
-- [ ] 创建 `documents` 记录，状态 `uploaded`
-- [ ] 通过 BackgroundTasks 触发处理链
-- [ ] 实现文档列表查询
-- [ ] 实现文档详情查询
-- [ ] 实现文档删除（含 chunk 和向量记录）
-- [ ] 实现文档重新处理
-- [ ] 单个文件失败不阻塞批量中的其他文件
-- [ ] 编写上传、校验、删除测试
-- [ ] 记录上传文件名、大小、校验结果；删除和重新处理记录文档 ID
+- [x] 实现单文件上传
+- [x] 实现批量上传
+- [x] 校验扩展名白名单：md、pdf、doc、docx、txt
+- [x] 校验文件大小 ≤ 20MB
+- [x] 校验文件内容不为空
+- [x] 文件名安全处理
+- [x] 保存原始文件到 `UPLOAD_DIR`
+- [x] 创建 `documents` 记录，状态 `uploaded`
+- [x] 通过 BackgroundTasks 触发处理链
+- [x] 实现文档列表查询
+- [x] 实现文档详情查询
+- [x] 实现文档删除（含 chunk 和向量记录）
+- [x] 实现文档重新处理
+- [x] 单个文件失败不阻塞批量中的其他文件
+- [x] 编写上传、校验、删除测试
+- [x] 记录上传文件名、大小、校验结果；删除和重新处理记录文档 ID
 
 ### 6.4 多格式文档解析
 
@@ -495,7 +495,7 @@ uploaded → parsing → indexing → ready
 2. [x] 应用配置、健康检查、基础启动
 3. [ ] 数据库表与 Repository
 4. [x] 用户注册与登录
-5. [ ] 文件上传与文档状态管理
+5. [x] 文件上传与文档状态管理
 6. [ ] 五种格式文档解析
 7. [ ] 文本清洗和分块
 8. [ ] Qwen Embedding 接入
@@ -600,5 +600,34 @@ uploaded → parsing → indexing → ready
 - 认证依赖：`get_current_user` 解析 Bearer JWT 并加载 active 用户，`GET /auth/me` 用于验证认证状态
 - 安全说明：响应和日志不输出明文密码；登录失败统一返回“邮箱或密码错误”
 - 测试：覆盖注册、默认知识库、bcrypt 哈希、邮箱唯一、错误登录、JWT 登录、退出和认证依赖
+- 完成日期：2026-10-11
+
+### 文件上传与文档管理
+
+- [√] 实现单文件上传
+- [√] 实现批量上传
+- [√] 校验扩展名白名单：md、pdf、doc、docx、txt
+- [√] 校验文件大小 ≤ 20MB
+- [√] 校验文件内容不为空
+- [√] 文件名安全处理
+- [√] 保存原始文件到 `UPLOAD_DIR`
+- [√] 创建 `documents` 记录，状态 `uploaded`
+- [√] 通过 BackgroundTasks 触发处理链
+- [√] 实现文档列表查询
+- [√] 实现文档详情查询
+- [√] 实现文档删除（含 chunk 和向量记录）
+- [√] 实现文档重新处理
+- [√] 单个文件失败不阻塞批量中的其他文件
+- [√] 编写上传、校验、删除测试
+- [√] 记录上传文件名、大小、校验结果；删除和重新处理记录文档 ID
+
+实现说明：
+- 修改文件：`app/api/documents.py`、`app/models.py`、`app/main.py`、`tests/test_documents.py`、`requirements.txt`、`spec.md`
+- 上传接口：`POST /documents/upload` 和 `POST /documents/batch-upload`，使用认证用户默认知识库
+- 校验规则：扩展名白名单、大小限制、非空内容和文件名安全处理
+- 存储规则：原始文件保存到 `UPLOAD_DIR/{user_id}/{document_id}/{filename}`，文档记录状态为 `uploaded`
+- 管理接口：`GET /documents`、`GET /documents/{document_id}`、`DELETE /documents/{document_id}`、`POST /documents/{document_id}/reprocess`
+- 删除与重处理：删除文档时清理原始文件和 chunks；重处理时清理旧 chunks 并重新触发后台处理占位任务
+- 测试：覆盖单文件上传、列表、详情、上传校验、批量失败隔离、删除和重新处理
 - 完成日期：2026-10-11
 ```
