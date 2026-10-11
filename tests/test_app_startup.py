@@ -2,15 +2,51 @@
 
 import os
 
-os.environ.setdefault("DATABASE_URL", "postgresql://user:password@localhost:5432/prag")
+os.environ.setdefault("DATABASE_URL", "sqlite+pysqlite:///:memory:")
 os.environ.setdefault("QWEN_API_KEY", "test-qwen-key")
 os.environ.setdefault("GPT_API_KEY", "test-gpt-key")
 os.environ.setdefault("JWT_SECRET_KEY", "test-jwt-secret")
 
 from fastapi.testclient import TestClient
 
+from app.core import database
 from app.core.config import ConfigurationError, Settings
 from app.main import create_app
+
+
+def test_schema_compatibility_adds_missing_document_chunk_columns(monkeypatch):
+    """PostgreSQL 旧表结构会补齐文档切片元数据列。"""
+    executed_statements = []
+
+    class FakeDialect:
+        name = "postgresql"
+
+    class FakeConnection:
+        def execute(self, statement):
+            executed_statements.append(str(statement))
+
+    class FakeContext:
+        def __enter__(self):
+            return FakeConnection()
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            return False
+
+    class FakeEngine:
+        dialect = FakeDialect()
+
+        def begin(self):
+            return FakeContext()
+
+    monkeypatch.setattr(database, "get_engine", lambda: FakeEngine())
+
+    database.ensure_schema_compatibility()
+
+    assert executed_statements == [
+        "ALTER TABLE document_chunks ADD COLUMN IF NOT EXISTS page_number INTEGER",
+        "ALTER TABLE document_chunks ADD COLUMN IF NOT EXISTS section_title VARCHAR(500)",
+        "ALTER TABLE document_chunks ADD COLUMN IF NOT EXISTS line_number INTEGER",
+    ]
 
 
 def test_required_environment_validation_reports_missing_values():
