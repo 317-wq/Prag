@@ -13,7 +13,7 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.database import Base
+from app.core.database import Base
 from app.models import Document, DocumentChunk, KnowledgeBase, User
 from app.parsers.document_loader import DocumentLoader, DocumentParseError, OCR_UNSUPPORTED_MESSAGE, parse_document_record
 
