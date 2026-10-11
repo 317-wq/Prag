@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     qwen_embedding_model: str = "qwen3.7-text-embedding"
     qwen_embedding_model_flash: str = "qwen3.7-text-embedding-flash"
     qwen_embedding_dimension: int = 1024
+    qwen_embedding_batch_size: int = 10
+    qwen_embedding_timeout_seconds: int = 60
+    qwen_embedding_max_retries: int = 2
+    qwen_embedding_retry_delay_seconds: float = 1.0
 
     gpt_api_key: str = ""
     gpt_base_url: str = "https://heyroute.ai/v1"
