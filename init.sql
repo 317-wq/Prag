@@ -94,6 +94,9 @@ CREATE TABLE document_chunks (
     content             TEXT NOT NULL,
     parent_content      TEXT,
     token_count         INTEGER,
+    page_number         INTEGER,
+    section_title       VARCHAR(500),
+    line_number         INTEGER,
     embedding           VECTOR(1024),
     created_at          TIMESTAMP NOT NULL DEFAULT now()
 );
