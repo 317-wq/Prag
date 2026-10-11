@@ -12,8 +12,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.config import settings
-from app.database import Base
+from app.core.config import settings
+from app.core.database import Base
 from app.models import Document, DocumentChunk, KnowledgeBase, User
 from app.services.retrieval import VectorRetriever
 
