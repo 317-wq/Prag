@@ -1,0 +1,30 @@
+# Core web framework
+
+# Database
+
+# LlamaIndex
+
+# Model and search clients
+
+# Authentication and configuration
+
+# Testing and logging
+fastapi
+uvicorn
+pydantic
+sqlalchemy
+psycopg2-binary
+llama-index
+llama-index-readers-docling
+llama-index-vector-stores-postgres
+pgvector
+openai
+tavily-python
+passlib[bcrypt]
+python-jose
+python-dotenv
+pydantic-settings
+pytest
+pytest-asyncio
+httpx
+loguru
