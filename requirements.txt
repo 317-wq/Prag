@@ -12,6 +12,7 @@
 fastapi
 uvicorn
 pydantic
+email-validator
 sqlalchemy
 psycopg2-binary
 llama-index
@@ -21,6 +22,7 @@ pgvector
 openai
 tavily-python
 passlib[bcrypt]
+bcrypt
 python-jose
 python-dotenv
 pydantic-settings

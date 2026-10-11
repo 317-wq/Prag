@@ -44,6 +44,10 @@ class Settings(BaseSettings):
     gpt_max_tokens: int = 2000
     gpt_timeout_seconds: int = 60
 
+    jwt_secret_key: str = ""
+    jwt_algorithm: str = "HS256"
+    jwt_expire_minutes: int = 60
+
     retrieval_top_k: int = 5
     retrieval_min_score: float = 0.3
     online_search_enabled: bool = False
@@ -71,6 +75,7 @@ class Settings(BaseSettings):
             "DATABASE_URL": self.database_url,
             "QWEN_API_KEY": self.qwen_api_key,
             "GPT_API_KEY": self.gpt_api_key,
+            "JWT_SECRET_KEY": self.jwt_secret_key,
         }
         missing = [name for name, value in required.items() if not value.strip()]
         if missing:

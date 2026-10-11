@@ -229,7 +229,7 @@ uploaded → parsing → indexing → ready
 ### 5.3 字段约定
 
 - [x] `email` 使用 CITEXT 或统一转小写
-- [ ] `password_hash` 使用 bcrypt
+- [x] `password_hash` 使用 bcrypt
 - [ ] `domain_label` 统一小写，V1 固定 `general`
 - [x] `embedding` 保持 `VECTOR(1024)`，换模型时重建列
 - [ ] 文档重新处理时，先删旧 chunk 再写新 chunk
@@ -270,15 +270,15 @@ uploaded → parsing → indexing → ready
 
 ### 6.2 用户注册与登录
 
-- [ ] 实现用户注册接口（邮箱 + 密码）
-- [ ] 密码 bcrypt 哈希存储
-- [ ] 注册时自动创建默认知识库
-- [ ] 实现登录接口，返回 JWT
-- [ ] 实现退出接口
-- [ ] 实现认证依赖，保护后续接口
-- [ ] 校验邮箱唯一
-- [ ] 编写注册、登录、鉴权测试
-- [ ] 记录注册、登录成功/失败日志，登录失败不记录密码
+- [x] 实现用户注册接口（邮箱 + 密码）
+- [x] 密码 bcrypt 哈希存储
+- [x] 注册时自动创建默认知识库
+- [x] 实现登录接口，返回 JWT
+- [x] 实现退出接口
+- [x] 实现认证依赖，保护后续接口
+- [x] 校验邮箱唯一
+- [x] 编写注册、登录、鉴权测试
+- [x] 记录注册、登录成功/失败日志，登录失败不记录密码
 
 ### 6.3 文件上传与文档管理
 
@@ -471,7 +471,7 @@ uploaded → parsing → indexing → ready
 ### 8.2 接口测试
 
 - [x] 健康检查
-- [ ] 注册 / 登录 / 鉴权
+- [x] 注册 / 登录 / 鉴权
 - [ ] 文档上传、列表、详情、删除、重新处理
 - [ ] 问答接口
 - [ ] 空问题
@@ -494,7 +494,7 @@ uploaded → parsing → indexing → ready
 1. [ ] 环境、密钥、目录配置
 2. [x] 应用配置、健康检查、基础启动
 3. [ ] 数据库表与 Repository
-4. [ ] 用户注册与登录
+4. [x] 用户注册与登录
 5. [ ] 文件上传与文档状态管理
 6. [ ] 五种格式文档解析
 7. [ ] 文本清洗和分块
@@ -533,7 +533,7 @@ uploaded → parsing → indexing → ready
 ### 字段约定核对
 
 - [√] `email` 使用 CITEXT 或统一转小写
-- [ ] `password_hash` 使用 bcrypt
+- [√] `password_hash` 使用 bcrypt
 - [ ] `domain_label` 统一小写，V1 固定 `general`
 - [√] `embedding` 保持 `VECTOR(1024)`，换模型时重建列
 - [ ] 文档重新处理时，先删旧 chunk 再写新 chunk
@@ -578,5 +578,27 @@ uploaded → parsing → indexing → ready
 - 日志：Loguru 同时输出终端和 `data/logs/app.log`，文件日志为 JSON，标准库日志通过 `InterceptHandler` 转发
 - 测试：新增配置缺失、`/health` 和前端首页静态资源测试
 - 验证：已运行 Pytest、compileall，并启动 Uvicorn 验证 `/health` 返回 `ok`、`/docs` 返回 200
+- 完成日期：2026-10-11
+
+### 用户注册与登录
+
+- [√] 实现用户注册接口（邮箱 + 密码）
+- [√] 密码 bcrypt 哈希存储
+- [√] 注册时自动创建默认知识库
+- [√] 实现登录接口，返回 JWT
+- [√] 实现退出接口
+- [√] 实现认证依赖，保护后续接口
+- [√] 校验邮箱唯一
+- [√] 编写注册、登录、鉴权测试
+- [√] 记录注册、登录成功/失败日志，登录失败不记录密码
+
+实现说明：
+- 修改文件：`app/api/auth.py`、`app/database.py`、`app/models.py`、`app/config.py`、`app/main.py`、`tests/test_auth.py`、`tests/test_app_startup.py`、`.env.example`、`requirements.txt`、`spec.md`
+- 注册接口：`POST /auth/register`，邮箱统一小写，密码使用 bcrypt 哈希，成功后创建“默认知识库”
+- 登录接口：`POST /auth/login`，校验邮箱和密码，返回 Bearer JWT
+- 退出接口：`POST /auth/logout`，要求认证，用于客户端丢弃无状态 JWT
+- 认证依赖：`get_current_user` 解析 Bearer JWT 并加载 active 用户，`GET /auth/me` 用于验证认证状态
+- 安全说明：响应和日志不输出明文密码；登录失败统一返回“邮箱或密码错误”
+- 测试：覆盖注册、默认知识库、bcrypt 哈希、邮箱唯一、错误登录、JWT 登录、退出和认证依赖
 - 完成日期：2026-10-11
 ```

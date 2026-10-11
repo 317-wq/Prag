@@ -5,6 +5,7 @@ import os
 os.environ.setdefault("DATABASE_URL", "postgresql://user:password@localhost:5432/prag")
 os.environ.setdefault("QWEN_API_KEY", "test-qwen-key")
 os.environ.setdefault("GPT_API_KEY", "test-gpt-key")
+os.environ.setdefault("JWT_SECRET_KEY", "test-jwt-secret")
 
 from fastapi.testclient import TestClient
 
