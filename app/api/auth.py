@@ -52,6 +52,21 @@ class LoginRequest(BaseModel):
         return value
 
 
+class PasswordChangeRequest(BaseModel):
+    """修改密码请求。"""
+
+    current_password: str = Field(min_length=1, max_length=128)
+    new_password: str = Field(min_length=8, max_length=128)
+
+    @field_validator("current_password", "new_password")
+    @classmethod
+    def validate_bcrypt_length(cls, value: str) -> str:
+        """拒绝超过 bcrypt 72 字节限制的密码。"""
+        if len(value.encode("utf-8")) > 72:
+            raise ValueError("密码长度不能超过 72 字节")
+        return value
+
+
 class UserResponse(BaseModel):
     """安全的用户响应，不包含密码哈希。"""
 
@@ -151,6 +166,18 @@ def login(payload: LoginRequest, db: Annotated[Session, Depends(get_db)]) -> Aut
     if user is None or user.status != "active" or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="邮箱或密码错误")
     return AuthResponse(access_token=create_access_token(user), user=user)
+
+
+@router.put("/password")
+def change_password(payload: PasswordChangeRequest, user: CurrentUser, db: Annotated[Session, Depends(get_db)]) -> dict[str, str]:
+    """校验旧密码并更新当前用户密码。"""
+    if not verify_password(payload.current_password, user.password_hash):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="当前密码错误")
+    if payload.current_password == payload.new_password:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="新密码不能与当前密码相同")
+    user.password_hash = hash_password(payload.new_password)
+    db.commit()
+    return {"message": "密码修改成功"}
 
 
 @router.post("/logout")
