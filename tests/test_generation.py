@@ -8,7 +8,7 @@ os.environ.setdefault("QWEN_API_KEY", "test-qwen-key")
 os.environ.setdefault("GPT_API_KEY", "test-gpt-key")
 os.environ.setdefault("JWT_SECRET_KEY", "test-jwt-secret")
 
-from app.config import settings
+from app.core.config import settings
 from app.services.generation import (
     GENERATION_FAILURE_ANSWER,
     NO_EVIDENCE_ANSWER,
