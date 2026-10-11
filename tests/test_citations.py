@@ -109,6 +109,7 @@ def test_persist_citations_writes_qa_references():
         ])
 
         assert len(references) == 1
+        assert references[0].citation_number == 1
         assert references[0].source_type == "document_chunk"
         assert references[0].document_id == document.id
         assert references[0].chunk_id == chunk.id
