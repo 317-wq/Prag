@@ -301,14 +301,14 @@ uploaded → parsing → indexing → ready
 
 ### 6.4 多格式文档解析
 
-- [ ] 封装 DoclingReader
-- [ ] 实现按扩展名路由的 Loader
-- [ ] 支持 md、pdf、doc、docx、txt
-- [ ] 提取标题、页码、章节等位置信息
-- [ ] 扫描版 PDF 明确返回“暂不支持 OCR”
-- [ ] 解析失败写入 `parse_error`
-- [ ] 编写各格式解析单元测试
-- [ ] 记录解析耗时、chunk 数量；失败记录 parse_error
+- [x] 封装 DoclingReader
+- [x] 实现按扩展名路由的 Loader
+- [x] 支持 md、pdf、doc、docx、txt
+- [x] 提取标题、页码、章节等位置信息
+- [x] 扫描版 PDF 明确返回“暂不支持 OCR”
+- [x] 解析失败写入 `parse_error`
+- [x] 编写各格式解析单元测试
+- [x] 记录解析耗时、chunk 数量；失败记录 parse_error
 
 ### 6.5 文本清洗与分块
 
@@ -496,7 +496,7 @@ uploaded → parsing → indexing → ready
 3. [ ] 数据库表与 Repository
 4. [x] 用户注册与登录
 5. [x] 文件上传与文档状态管理
-6. [ ] 五种格式文档解析
+6. [x] 五种格式文档解析
 7. [ ] 文本清洗和分块
 8. [ ] Qwen Embedding 接入
 9. [ ] pgvector 向量索引
@@ -629,5 +629,27 @@ uploaded → parsing → indexing → ready
 - 管理接口：`GET /documents`、`GET /documents/{document_id}`、`DELETE /documents/{document_id}`、`POST /documents/{document_id}/reprocess`
 - 删除与重处理：删除文档时清理原始文件和 chunks；重处理时清理旧 chunks 并重新触发后台处理占位任务
 - 测试：覆盖单文件上传、列表、详情、上传校验、批量失败隔离、删除和重新处理
+- 完成日期：2026-10-11
+
+### 多格式文档解析
+
+- [√] 封装 DoclingReader
+- [√] 实现按扩展名路由的 Loader
+- [√] 支持 md、pdf、doc、docx、txt
+- [√] 提取标题、页码、章节等位置信息
+- [√] 扫描版 PDF 明确返回“暂不支持 OCR”
+- [√] 解析失败写入 `parse_error`
+- [√] 编写各格式解析单元测试
+- [√] 记录解析耗时、chunk 数量；失败记录 parse_error
+
+实现说明：
+- 修改文件：`app/parsers/__init__.py`、`app/parsers/document_loader.py`、`app/api/documents.py`、`tests/test_document_loader.py`、`spec.md`
+- 解析入口：`DocumentLoader.parse()` 按扩展名路由 md、txt 和 DoclingReader 支持格式
+- 文本格式：md/txt 提取标题、章节和起始行号；md 按标题拆分章节
+- Docling 格式：pdf/doc/docx 通过 DoclingReader 读取文本，并提取标题、页码、章节等 metadata
+- OCR 限制：扫描版 PDF 未解析出文本时返回 `扫描版 PDF 暂不支持 OCR`
+- 失败处理：`parse_document_record()` 将文档状态置为 `failed` 并写入 `parse_error`
+- 日志：记录解析耗时、chunk 数量；失败记录 `parse_error`
+- 测试：覆盖 md、txt、pdf、doc、docx、扫描版 PDF 和 parse_error 写入
 - 完成日期：2026-10-11
 ```
