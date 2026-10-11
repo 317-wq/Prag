@@ -84,6 +84,39 @@ class Document(Base):
     chunks: Mapped[list["DocumentChunk"]] = relationship(back_populates="document", cascade="all, delete-orphan")
 
 
+class QAMessage(Base):
+    """问答消息模型，保存用户问题、回答和置信度。"""
+
+    __tablename__ = "qa_messages"
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    session_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)
+    user_id: Mapped[UUID] = mapped_column(Uuid, nullable=False, index=True)
+    knowledge_base_id: Mapped[UUID] = mapped_column(Uuid, nullable=False, index=True)
+    question: Mapped[str] = mapped_column(Text)
+    answer: Mapped[str | None] = mapped_column(Text, nullable=True)
+    intent_type: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    routed_domain: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    confidence_score: Mapped[float | None] = mapped_column(nullable=True)
+    answer_source: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class QAReference(Base):
+    """回答引用模型，保存回答关联的文档切片来源。"""
+
+    __tablename__ = "qa_references"
+
+    id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    qa_message_id: Mapped[UUID] = mapped_column(Uuid, nullable=False, index=True)
+    source_type: Mapped[str] = mapped_column(String(20), default="document_chunk")
+    document_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)
+    chunk_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)
+    snippet: Mapped[str | None] = mapped_column(Text, nullable=True)
+    relevance_score: Mapped[float | None] = mapped_column(nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
 class DocumentChunk(Base):
     """文档切片模型，用于删除文档时级联清理。"""
 
