@@ -14,8 +14,8 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.config import settings
-from app.database import Base, get_db
+from app.core.config import settings
+from app.core.database import Base, get_db
 from app.main import create_app
 from app.models import Document, DocumentChunk, KnowledgeBase, User
 
