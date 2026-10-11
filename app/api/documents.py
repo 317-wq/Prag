@@ -12,8 +12,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api.auth import CurrentUser
-from app.config import settings
-from app.database import get_db
+from app.core.config import settings
+from app.core.database import get_db
 from app.models import Document, DocumentChunk, KnowledgeBase, User
 from app.parsers.document_loader import DocumentParseError, parse_document_record
 from app.services.embedding import embed_document_record
@@ -91,7 +91,7 @@ def build_storage_path(user_id: UUID, document_id: UUID, filename: str) -> Path:
 
 def enqueue_document_processing(document_id: UUID) -> None:
     """触发文档解析处理链，失败时写入 parse_error。"""
-    from app.database import get_session_factory
+    from app.core.database import get_session_factory
 
     logger.bind(event="document_processing_enqueued", document_id=str(document_id)).info("document processing enqueued")
     session_factory = get_session_factory()
