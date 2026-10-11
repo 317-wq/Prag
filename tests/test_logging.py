@@ -13,6 +13,8 @@ def test_compact_format_uses_second_precision_and_short_context():
             "time": datetime(2026, 10, 11, 12, 34, 56),
             "level": type("Level", (), {"name": "INFO"})(),
             "message": "request completed",
+            "file": type("File", (), {"name": "main.py"})(),
+            "line": 45,
             "extra": {
                 "event": "http_request",
                 "request_id": "request-1",
@@ -23,8 +25,8 @@ def test_compact_format_uses_second_precision_and_short_context():
         }
     )
 
-    assert re.match(r"^2026-10-11 12:34:56 \| INFO     \| request completed", output)
-    assert "event" not in output
+    assert re.match(r"^2026-10-11 12:34:56 INFO     main.py:45 request completed", output)
+    assert "event=http_request" in output
     assert "duration_ms" not in output
     assert "path" not in output
     assert "request_id=request-1" in output
