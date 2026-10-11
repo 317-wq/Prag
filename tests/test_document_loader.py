@@ -9,12 +9,12 @@ os.environ.setdefault("GPT_API_KEY", "test-gpt-key")
 os.environ.setdefault("JWT_SECRET_KEY", "test-jwt-secret")
 
 import pytest
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.database import Base
-from app.models import Document, KnowledgeBase, User
+from app.models import Document, DocumentChunk, KnowledgeBase, User
 from app.parsers.document_loader import DocumentLoader, DocumentParseError, OCR_UNSUPPORTED_MESSAGE, parse_document_record
 
 
@@ -118,6 +118,24 @@ def test_scanned_pdf_returns_ocr_unsupported(tmp_path):
 
     with pytest.raises(DocumentParseError, match=OCR_UNSUPPORTED_MESSAGE):
         loader.parse(file_path, "pdf")
+
+
+def test_parse_document_record_writes_chunks(tmp_path):
+    """解析成功时将文本分块写入 document_chunks。"""
+    session_factory = create_session_factory()
+    file_path = tmp_path / "chunk.md"
+    file_path.write_text("# 标题\n第一段\n\n第二段", encoding="utf-8")
+    with session_factory() as session:
+        document = create_document(session, file_path, "md")
+        parse_document_record(session, document.id)
+        chunks = list(session.scalars(select(DocumentChunk).where(DocumentChunk.document_id == document.id).order_by(DocumentChunk.chunk_index)))
+        session.refresh(document)
+        assert document.status == "parsed"
+        assert len(chunks) == 1
+        assert chunks[0].document_id == document.id
+        assert chunks[0].chunk_index == 0
+        assert chunks[0].parent_content == "标题：标题"
+        assert chunks[0].content == "# 标题\n第一段\n\n第二段"
 
 
 def test_parse_failure_writes_parse_error(tmp_path):
