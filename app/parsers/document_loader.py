@@ -7,7 +7,7 @@ from llama_index.readers.docling import DoclingReader
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from app.config import settings
+from app.core.config import settings
 from app.models import Document, DocumentChunk
 from app.parsers.schemas import ParsedDocument, ParseResult
 from app.parsers.text_chunker import TextChunker
