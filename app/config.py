@@ -47,6 +47,9 @@ class Settings(BaseSettings):
     gpt_temperature: float = 0.3
     gpt_max_tokens: int = 2000
     gpt_timeout_seconds: int = 60
+    gpt_max_retries: int = 1
+    gpt_retry_delay_seconds: float = 1.0
+    gpt_token_char_ratio: int = 4
 
     jwt_secret_key: str = ""
     jwt_algorithm: str = "HS256"
