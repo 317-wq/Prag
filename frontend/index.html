@@ -1,14 +1,59 @@
+<!-- Prag 知识工作台的单页入口，包含认证、问答、文档和设置视图。 -->
 <!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Prag 知识库</title>
+  <meta name="theme-color" content="#102b3f">
+  <title>Prag｜知识工作台</title>
+  <link rel="stylesheet" href="/static/css/app.css">
 </head>
 <body>
-  <main>
-    <h1>Prag 知识库</h1>
-    <p>前端资源服务已启动。</p>
-  </main>
+  <div id="app" class="app-shell">
+    <section id="auth-view" class="auth-view" aria-labelledby="auth-title">
+      <div class="auth-intro">
+        <p class="eyebrow">PRAG / KNOWLEDGE DESK</p>
+        <h1 id="auth-title">把散落的资料，<em>变成可追溯的答案。</em></h1>
+        <p>上传你的文档，和有证据的知识对话。每个回答都告诉你，它来自哪里。</p>
+      </div>
+      <form id="auth-form" class="auth-form" novalidate>
+        <div class="form-heading"><span id="auth-mode-label">欢迎回来</span><button type="button" id="auth-toggle" class="text-button">注册新账号</button></div>
+        <label>邮箱<input id="auth-email" name="email" type="email" autocomplete="email" required placeholder="name@example.com"></label>
+        <label>密码<input id="auth-password" name="password" type="password" autocomplete="current-password" minlength="8" required placeholder="至少 8 位字符"></label>
+        <label id="nickname-field" class="is-hidden">称呼<input id="auth-nickname" name="nickname" type="text" autocomplete="nickname" maxlength="100" placeholder="怎么称呼你？"></label>
+        <button class="primary-button full-width" type="submit" id="auth-submit">登录工作台</button>
+        <p id="auth-error" class="form-error" role="alert"></p>
+      </form>
+    </section>
+
+    <section id="workspace-view" class="workspace-view is-hidden">
+      <aside class="sidebar">
+        <div class="brand"><span class="brand-mark">P</span><span>Prag<small>知识工作台</small></span></div>
+        <nav aria-label="主导航">
+          <button class="nav-item is-active" data-view="chat"><span>↗</span>问答</button>
+          <button class="nav-item" data-view="documents"><span>▤</span>文档</button>
+          <button class="nav-item" data-view="settings"><span>◌</span>设置</button>
+        </nav>
+        <div class="sidebar-foot"><div class="status-dot"></div><span>本地知识库在线</span><button id="logout-button" class="logout-button" type="button">退出</button></div>
+      </aside>
+      <main class="main-content">
+        <header class="mobile-header"><button id="menu-button" class="icon-button" type="button" aria-label="打开菜单">☰</button><strong>Prag</strong></header>
+        <section id="chat-view" class="page-view" aria-labelledby="chat-title">
+          <header class="page-header"><div><p class="eyebrow">问答空间</p><h2 id="chat-title">从你的资料里，找到答案</h2><p>回答只使用已索引的文档，并把证据留在每句话旁边。</p></div><div class="header-note">知识库<br><strong>个人资料库</strong></div></header>
+          <div id="messages" class="messages" aria-live="polite"><div class="welcome-message"><span class="welcome-glyph">⌁</span><h3>今天想查什么？</h3><p>试试问：“项目的部署步骤是什么？”<br>我会从你的文档中检索，并标出依据。</p></div></div>
+          <form id="chat-form" class="composer"><textarea id="question-input" rows="1" maxlength="10000" placeholder="向你的知识库提问……" aria-label="问题"></textarea><div class="composer-footer"><span>Enter 发送 · Shift + Enter 换行</span><button id="send-button" class="primary-button" type="submit">发送 <span>↗</span></button></div></form>
+        </section>
+        <section id="documents-view" class="page-view is-hidden" aria-labelledby="documents-title">
+          <header class="page-header"><div><p class="eyebrow">资料架</p><h2 id="documents-title">你的文档</h2><p>文件会自动解析、切片并建立索引。状态变化会实时同步。</p></div><label class="primary-button upload-button">上传文档<input id="file-input" type="file" multiple accept=".md,.pdf,.doc,.docx,.txt"></label></header>
+          <div id="upload-feedback" class="inline-feedback" role="status"></div><div id="documents-list" class="document-list"></div>
+        </section>
+        <section id="settings-view" class="page-view is-hidden" aria-labelledby="settings-title">
+          <header class="page-header"><div><p class="eyebrow">工作台设置</p><h2 id="settings-title">账户与安全</h2><p>管理你的身份信息和登录凭证。</p></div></header>
+          <div class="settings-grid"><article class="settings-panel"><h3>账户信息</h3><p class="panel-caption">这是你在 Prag 中的身份。</p><dl class="account-details"><div><dt>邮箱</dt><dd id="account-email">—</dd></div><div><dt>称呼</dt><dd id="account-nickname">—</dd></div></dl></article><form id="password-form" class="settings-panel" novalidate><h3>修改密码</h3><p class="panel-caption">修改后，其他设备上的登录仍会保持有效。</p><label>当前密码<input id="current-password" type="password" autocomplete="current-password" required></label><label>新密码<input id="new-password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required></label><label>确认新密码<input id="confirm-password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required></label><button class="primary-button" type="submit">保存新密码</button><p id="password-feedback" class="form-feedback" role="status"></p></form></div>
+        </section>
+      </main>
+    </section>
+  </div>
+  <script src="/static/js/app.js"></script>
 </body>
 </html>
