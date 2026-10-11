@@ -108,10 +108,13 @@ class QAReference(Base):
     __tablename__ = "qa_references"
 
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
-    qa_message_id: Mapped[UUID] = mapped_column(Uuid, nullable=False, index=True)
+    qa_message_id: Mapped[UUID] = mapped_column(Uuid, ForeignKey("qa_messages.id", ondelete="CASCADE"), nullable=False, index=True)
+    citation_number: Mapped[int] = mapped_column(Integer)
     source_type: Mapped[str] = mapped_column(String(20), default="document_chunk")
-    document_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)
-    chunk_id: Mapped[UUID | None] = mapped_column(Uuid, nullable=True)
+    document_id: Mapped[UUID | None] = mapped_column(Uuid, ForeignKey("documents.id", ondelete="CASCADE"), nullable=True)
+    chunk_id: Mapped[UUID | None] = mapped_column(Uuid, ForeignKey("document_chunks.id", ondelete="CASCADE"), nullable=True)
+    web_title: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    web_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     snippet: Mapped[str | None] = mapped_column(Text, nullable=True)
     relevance_score: Mapped[float | None] = mapped_column(nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
