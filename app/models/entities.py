@@ -7,9 +7,9 @@ from sqlalchemy import BigInteger, DateTime, ForeignKey, Integer, JSON, String, 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import Uuid, TypeDecorator
 
-from app.config import settings
+from app.core.config import settings
 
-from app.database import Base
+from app.core.database import Base
 
 
 class EmbeddingType(TypeDecorator[list[float]]):
