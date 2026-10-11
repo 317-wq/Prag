@@ -13,7 +13,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.database import Base
+from app.core.database import Base
 from app.models import Document, DocumentChunk, KnowledgeBase, QAReference, User
 from app.services.citations import CitationError, map_citations, persist_citations
 from app.services.retrieval import RetrievalItem
