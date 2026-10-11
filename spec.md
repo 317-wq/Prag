@@ -312,13 +312,13 @@ uploaded → parsing → indexing → ready
 
 ### 6.5 文本清洗与分块
 
-- [ ] 清理无意义空白和重复换行
-- [ ] 保留标题、章节、页码边界
-- [ ] 按段落优先切分
-- [ ] 配置 chunk 最大长度和 overlap
-- [ ] 为 chunk 添加 `document_id`、`chunk_index`、`parent_content`
-- [ ] 编写分块单元测试
-- [ ] 记录 chunk 数量、平均长度、耗时
+- [x] 清理无意义空白和重复换行
+- [x] 保留标题、章节、页码边界
+- [x] 按段落优先切分
+- [x] 配置 chunk 最大长度和 overlap
+- [x] 为 chunk 添加 `document_id`、`chunk_index`、`parent_content`
+- [x] 编写分块单元测试
+- [x] 记录 chunk 数量、平均长度、耗时
 
 ### 6.6 Embedding 与向量索引
 
@@ -497,7 +497,7 @@ uploaded → parsing → indexing → ready
 4. [x] 用户注册与登录
 5. [x] 文件上传与文档状态管理
 6. [x] 五种格式文档解析
-7. [ ] 文本清洗和分块
+7. [x] 文本清洗和分块
 8. [ ] Qwen Embedding 接入
 9. [ ] pgvector 向量索引
 10. [ ] 基础向量检索
@@ -651,5 +651,26 @@ uploaded → parsing → indexing → ready
 - 失败处理：`parse_document_record()` 将文档状态置为 `failed` 并写入 `parse_error`
 - 日志：记录解析耗时、chunk 数量；失败记录 `parse_error`
 - 测试：覆盖 md、txt、pdf、doc、docx、扫描版 PDF 和 parse_error 写入
+- 完成日期：2026-10-11
+
+### 文本清洗与分块
+
+- [√] 清理无意义空白和重复换行
+- [√] 保留标题、章节、页码边界
+- [√] 按段落优先切分
+- [√] 配置 chunk 最大长度和 overlap
+- [√] 为 chunk 添加 `document_id`、`chunk_index`、`parent_content`
+- [√] 编写分块单元测试
+- [√] 记录 chunk 数量、平均长度、耗时
+
+实现说明：
+- 修改文件：`app/parsers/schemas.py`、`app/parsers/text_chunker.py`、`app/parsers/document_loader.py`、`app/config.py`、`.env.example`、`tests/test_text_chunker.py`、`tests/test_document_loader.py`、`spec.md`
+- 配置项：新增 `CHUNK_MAX_LENGTH` 和 `CHUNK_OVERLAP`，本地 `.env` 已同步实际值但不提交
+- 清洗规则：压缩无意义空白、统一换行、合并重复空行并保留段落边界
+- 分块规则：优先按段落合并，超长段落按最大长度和 overlap 切分
+- 元数据：chunk 写入 `document_id`、`chunk_index`、`parent_content`，保留标题、章节、页码边界
+- 入库逻辑：解析成功后清理旧 chunks，再写入新的 `document_chunks`
+- 日志：记录 chunk 数量、平均长度和分块耗时
+- 测试：覆盖文本清洗、父级上下文、段落优先、overlap、非法配置和 chunk 入库
 - 完成日期：2026-10-11
 ```
