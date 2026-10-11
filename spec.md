@@ -128,8 +128,8 @@
 
 - [x] 创建 `.env.example`，包含全部配置项，密钥留空
 - [x] 创建本地 `.env`，填入真实密钥，确认不提交 Git
-- [ ] 启动时校验必填配置
-- [ ] 敏感配置在日志中脱敏
+- [x] 启动时校验必填配置
+- [x] 敏感配置在日志中脱敏
 
 ---
 
@@ -209,29 +209,29 @@ uploaded → parsing → indexing → ready
                          └──────→ failed
 ```
 
-- [ ] 定义状态枚举
-- [ ] 定义状态转换规则
+- [x] 定义状态枚举
+- [x] 定义状态转换规则
 - [ ] 定义 `processing_jobs` 与 `documents.status` 的汇总关系
 
 ### 5.2 核心实体
 
 按 PRD 第 10 节实现：
 
-- [ ] users
-- [ ] knowledge_bases
-- [ ] documents
-- [ ] document_chunks（含 `VECTOR(1024)`）
-- [ ] qa_messages
-- [ ] qa_references
-- [ ] processing_jobs
-- [ ] qa_sessions（V2）
+- [x] users
+- [x] knowledge_bases
+- [x] documents
+- [x] document_chunks（含 `VECTOR(1024)`）
+- [x] qa_messages
+- [x] qa_references
+- [x] processing_jobs
+- [x] qa_sessions（V2）
 
 ### 5.3 字段约定
 
-- [ ] `email` 使用 CITEXT 或统一转小写
+- [x] `email` 使用 CITEXT 或统一转小写
 - [ ] `password_hash` 使用 bcrypt
 - [ ] `domain_label` 统一小写，V1 固定 `general`
-- [ ] `embedding` 保持 `VECTOR(1024)`，换模型时重建列
+- [x] `embedding` 保持 `VECTOR(1024)`，换模型时重建列
 - [ ] 文档重新处理时，先删旧 chunk 再写新 chunk
 
 ### 5.4 日志约定
@@ -246,11 +246,11 @@ uploaded → parsing → indexing → ready
 - `duration_ms`：耗时，单位毫秒
 - `status`：success / failed
 
-- [ ] 配置 Loguru 输出到 `data/logs/app.log`
-- [ ] 用 InterceptHandler 桥接标准库日志（Uvicorn、SQLAlchemy）
-- [ ] 敏感信息（API Key、密码）不写入日志
-- [ ] 定义日志字段和格式
-- [ ] 定义日志级别使用规则（INFO 正常操作，WARNING 可恢复异常，ERROR 不可恢复失败）
+- [x] 配置 Loguru 输出到 `data/logs/app.log`
+- [x] 用 InterceptHandler 桥接标准库日志（Uvicorn、SQLAlchemy）
+- [x] 敏感信息（API Key、密码）不写入日志
+- [x] 定义日志字段和格式
+- [x] 定义日志级别使用规则（INFO 正常操作，WARNING 可恢复异常，ERROR 不可恢复失败）
 
 ---
 
@@ -258,15 +258,15 @@ uploaded → parsing → indexing → ready
 
 ### 6.1 基础配置与应用启动
 
-- [ ] 实现配置加载（`app/config.py`）
-- [ ] 实现必填环境变量校验
-- [ ] 实现 FastAPI 应用入口（`app/main.py`）
-- [ ] 配置统一异常处理
-- [ ] 配置请求 ID 和结构化日志
-- [ ] 实现 `/health`
-- [ ] 配置前端静态资源托管
-- [ ] 验证启动成功、API 文档可访问
-- [ ] 配置 Loguru 输出到 `data/logs/app.log`
+- [x] 实现配置加载（`app/config.py`）
+- [x] 实现必填环境变量校验
+- [x] 实现 FastAPI 应用入口（`app/main.py`）
+- [x] 配置统一异常处理
+- [x] 配置请求 ID 和结构化日志
+- [x] 实现 `/health`
+- [x] 配置前端静态资源托管
+- [x] 验证启动成功、API 文档可访问
+- [x] 配置 Loguru 输出到 `data/logs/app.log`
 
 ### 6.2 用户注册与登录
 
@@ -456,7 +456,7 @@ uploaded → parsing → indexing → ready
 
 ### 8.1 单元测试
 
-- [ ] 配置加载与校验
+- [x] 配置加载与校验
 - [ ] 文件类型和大小校验
 - [ ] 各格式文档解析
 - [ ] 文本清洗与分块边界
@@ -470,7 +470,7 @@ uploaded → parsing → indexing → ready
 
 ### 8.2 接口测试
 
-- [ ] 健康检查
+- [x] 健康检查
 - [ ] 注册 / 登录 / 鉴权
 - [ ] 文档上传、列表、详情、删除、重新处理
 - [ ] 问答接口
@@ -492,7 +492,7 @@ uploaded → parsing → indexing → ready
 ## 9. 开发执行顺序
 
 1. [ ] 环境、密钥、目录配置
-2. [ ] 应用配置、健康检查、基础启动
+2. [x] 应用配置、健康检查、基础启动
 3. [ ] 数据库表与 Repository
 4. [ ] 用户注册与登录
 5. [ ] 文件上传与文档状态管理
@@ -513,18 +513,70 @@ uploaded → parsing → indexing → ready
 ## 10. 每次开发任务的完成记录
 
 ```markdown
-### 基础目录结构配置
+### 核心实体数据库定义
 
-- [√] 创建 `app/`、`frontend/`、`data/`、`tests/` 目录及规划中的子目录
-- [√] 创建 `data/logs/` 和 `data/uploads/`
-- [√] 确认 `data/` 不会被提交到 Git
-- [ ] 各层职责边界（待应用代码实现后确认）
-- [ ] FastAPI 托管前端静态资源（待 FastAPI 应用实现后确认）
+- [√] `users`
+- [√] `knowledge_bases`
+- [√] `documents`
+- [√] `document_chunks`，包含 `VECTOR(1024)`
+- [√] `qa_messages`
+- [√] `qa_references`
+- [√] `processing_jobs`
+- [√] `qa_sessions`（V2）
 
 实现说明：
 - 修改文件：`spec.md`
-- 新增目录：`app/`、`frontend/`、`data/`、`tests/`
-- 验证结果：`data/logs/` 和 `data/uploads/` 均被 `.gitignore` 忽略
-- 未完成项：当前尚无应用源码，无法验证职责边界和静态资源托管
+- 已有依据：`init.sql` 已包含上述 8 张表的建表语句、主键、外键和相关约束
+- 说明：本次确认的是数据库实体定义，不代表应用层 CRUD 或业务流程已经实现
 - 完成日期：2026-10-10
+
+### 字段约定核对
+
+- [√] `email` 使用 CITEXT 或统一转小写
+- [ ] `password_hash` 使用 bcrypt
+- [ ] `domain_label` 统一小写，V1 固定 `general`
+- [√] `embedding` 保持 `VECTOR(1024)`，换模型时重建列
+- [ ] 文档重新处理时，先删旧 chunk 再写新 chunk
+
+实现说明：
+- 修改文件：`spec.md`
+- 已有依据：`init.sql` 中 `users.email` 定义为 `CITEXT`，`document_chunks.embedding` 定义为 `VECTOR(1024)`
+- 未勾选项：bcrypt、`domain_label` 统一小写和文档重新处理流程均需要应用层代码，目前处于环境配置阶段，暂不实现
+- 完成日期：2026-10-11
+
+### 日志字段和格式约定
+
+- [√] 定义日志字段和格式
+- [ ] 配置 Loguru 输出到 `data/logs/app.log`
+- [ ] 用 InterceptHandler 桥接标准库日志（Uvicorn、SQLAlchemy）
+- [ ] 敏感信息（API Key、密码）不写入日志
+- [√] 定义日志级别使用规则
+
+实现说明：
+- 修改文件：`spec.md`
+- 已有依据：第 5.4 节已定义 Loguru、JSON 格式、日志文件路径、日志字段及 INFO / WARNING / ERROR 的使用规则
+- 未勾选项：日志输出、标准库桥接和敏感信息脱敏需要应用层代码，目前处于环境配置阶段，暂不实现
+- 完成日期：2026-10-11
+
+### 基础配置与应用启动
+
+- [√] 实现配置加载（`app/config.py`）
+- [√] 实现必填环境变量校验
+- [√] 实现 FastAPI 应用入口（`app/main.py`）
+- [√] 配置统一异常处理
+- [√] 配置请求 ID 和结构化日志
+- [√] 实现 `/health`
+- [√] 配置前端静态资源托管
+- [√] 验证启动成功、API 文档可访问
+- [√] 配置 Loguru 输出到 `data/logs/app.log`
+
+实现说明：
+- 修改文件：`app/config.py`、`app/main.py`、`app/api/health.py`、`frontend/index.html`、`tests/test_app_startup.py`、`spec.md`
+- 配置加载：使用 `pydantic-settings` 读取 `.env` 和环境变量，集中定义数据库、上传、模型、检索、日志配置
+- 必填校验：启动前可校验 `DATABASE_URL`、`QWEN_API_KEY`、`GPT_API_KEY`，错误信息只输出变量名，不输出密钥值
+- 应用入口：创建 FastAPI 实例，挂载健康检查路由和前端静态资源
+- 日志：Loguru 同时输出终端和 `data/logs/app.log`，文件日志为 JSON，标准库日志通过 `InterceptHandler` 转发
+- 测试：新增配置缺失、`/health` 和前端首页静态资源测试
+- 验证：已运行 Pytest、compileall，并启动 Uvicorn 验证 `/health` 返回 `ok`、`/docs` 返回 200
+- 完成日期：2026-10-11
 ```
