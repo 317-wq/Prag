@@ -167,6 +167,7 @@ CREATE INDEX idx_qa_messages_created_at ON qa_messages(created_at DESC);
 CREATE TABLE qa_references (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     qa_message_id       UUID NOT NULL REFERENCES qa_messages(id) ON DELETE CASCADE,
+    citation_number     INTEGER NOT NULL,
     source_type         VARCHAR(20) NOT NULL,
     document_id         UUID REFERENCES documents(id) ON DELETE CASCADE,
     chunk_id            UUID REFERENCES document_chunks(id) ON DELETE CASCADE,
