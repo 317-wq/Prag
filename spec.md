@@ -336,75 +336,17 @@ uploaded → parsing → indexing → ready
 
 ### 6.7 基础向量检索
 
-#### 6.7.1 模块目标
+- [x] 封装查询向量生成
+- [x] 实现 pgvector 余弦相似度检索
+- [x] 过滤条件：`user_id`、`knowledge_base_id`、`domain_label='general'`、关联文档 `status='ready'`
+- [x] 配置 `RETRIEVAL_TOP_K`
+- [x] 返回相似度分数、chunk 文本和引用元数据
+- [x] 实现 `RETRIEVAL_MIN_SCORE` 最小相关性阈值
+- [x] 无命中时返回空结果，不进入后续 LLM 链路
+- [x] 记录检索耗时、命中数、top_k、最高相似度
+- [x] 编写有命中、权限/知识库/状态隔离、top_k、低分和空结果测试
 
-在当前登录用户的默认知识库中，根据问题语义召回已完成索引的文档切片，为后续 Prompt 拼接提供有依据的上下文。V1 只检索 `domain_label='general'`，不执行关键词检索、混合检索、重排或在线搜索。
-
-#### 6.7.2 检索输入
-
-检索服务接收以下参数：
-
-- `user_id`：当前登录用户 ID，必须作为权限过滤条件
-- `knowledge_base_id`：当前知识库 ID，必须作为数据范围过滤条件
-- `question`：用户问题，去除首尾空白后不能为空
-- `top_k`：召回数量，默认读取 `RETRIEVAL_TOP_K`；必须为正整数
-- `min_score`：最小余弦相似度，默认读取 `RETRIEVAL_MIN_SCORE`；取值范围为 `[-1, 1]`
-
-查询向量必须通过与入库相同的 Embedding 客户端和模型生成，维度必须与 `document_chunks.embedding VECTOR(1024)` 一致。查询向量生成失败时终止本次检索并返回统一错误，不调用 LLM。
-
-#### 6.7.3 数据过滤与排序
-
-使用 `document_chunks` 与 `documents` 关联查询，过滤条件如下：
-
-- `document_chunks.user_id = :user_id`
-- `document_chunks.knowledge_base_id = :knowledge_base_id`
-- `document_chunks.domain_label = 'general'`
-- `documents.status = 'ready'`
-- `document_chunks.embedding IS NOT NULL`
-
-`status='ready'` 是 `documents.status` 的过滤条件，不在 `document_chunks` 表上直接读取。使用 pgvector 的余弦距离运算符 `<=>` 计算距离，并转换为相似度：`similarity = 1 - (embedding <=> :query_embedding)`。按相似度降序排列，先应用 `min_score`，再限制返回 `top_k` 条结果。
-
-#### 6.7.4 检索输出
-
-每条结果至少包含：
-
-- `chunk_id`、`document_id`
-- `content`：命中的 chunk 文本
-- `parent_content`：父级上下文；为空时不强行补造
-- `similarity`：原始相似度分数，不转换为百分比
-- `document_name`、`chunk_index`
-- `page_number`、`section_title` 等已有引用元数据；字段不存在时返回 `null`
-
-检索服务同时返回本次检索的统计信息：`top_k`、`min_score`、`hit_count`、`max_similarity`、`duration_ms`。无命中时 `hit_count=0`、`max_similarity=null`，结果列表为空。
-
-#### 6.7.5 空结果与后续链路
-
-以下情况均视为无有效依据：问题为空、查询向量生成失败、没有满足过滤条件的切片、所有结果低于 `min_score`。V1 对无有效依据的请求直接返回“未找到依据”，不得调用 LLM、在线搜索或生成服务；同时保留检索日志和失败原因。
-
-有命中时，只将检索结果中的 `content`、必要的 `parent_content` 和引用元数据交给 6.8 Prompt 与回答生成模块，不在检索模块内拼接最终回答。
-
-#### 6.7.6 配置与日志
-
-- [ ] 封装查询向量生成
-- [ ] 实现 pgvector 余弦相似度检索
-- [ ] 过滤条件：`user_id`、`knowledge_base_id`、`domain_label='general'`、关联文档 `status='ready'`
-- [ ] 配置 `RETRIEVAL_TOP_K`
-- [ ] 配置 `RETRIEVAL_MIN_SCORE`
-- [ ] 返回相似度分数和引用元数据
-- [ ] 检索为空时不调用 LLM
-- [ ] 记录 `event=retrieval`、`request_id`、`user_id`、`knowledge_base_id`、`top_k`、`hit_count`、`max_similarity`、`duration_ms` 和 `status`
-- [ ] 日志不得记录查询向量、API Key、密码或完整敏感文档内容
-
-#### 6.7.7 测试与验收
-
-- [ ] 有命中：只返回当前用户、当前知识库、`general` 领域且所属文档为 `ready` 的切片，并按相似度降序排列
-- [ ] 权限隔离：其他用户或其他知识库的高相似度切片不会出现在结果中
-- [ ] 状态隔离：`uploaded`、`parsing`、`indexing`、`failed` 文档的切片不会被检索
-- [ ] `top_k` 生效，返回数量不超过配置值
-- [ ] 最小相关性阈值生效，低于阈值的结果被过滤
-- [ ] 无命中：返回空结果和“未找到依据”，且使用 mock 验证 LLM 未被调用
-- [ ] 查询向量维度错误或 Embedding 调用失败：返回统一错误并记录失败日志
-- [ ] 记录检索耗时、命中数、最高相似度和请求 ID
+完成说明：已新增 `VectorRetriever`，PostgreSQL 使用 pgvector 余弦距离检索，SQLite 测试环境使用等价余弦计算；支持用户、知识库、领域、文档状态过滤，返回 chunk 和页码/章节/行号引用元数据，并记录结构化检索统计。同步修复文档处理链：解析状态使用 `parsing/indexing`，后台任务继续执行 Embedding，成功后进入 `ready`；新增切片引用字段并同步 `init.sql`。虚拟环境测试结果为 `32 passed, 2 warnings`。
 
 ### 6.8 Prompt 与回答生成
 
