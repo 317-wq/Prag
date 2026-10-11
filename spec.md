@@ -410,13 +410,22 @@ uploaded → parsing → indexing → ready
 
 ### 6.12 V1 集成验收
 
-- [ ] 上传 md / pdf / doc / docx / txt 各一份，均能索引成功
-- [ ] 文档状态从 uploaded 变为 ready
-- [ ] 用文档中的事实提问，获得带引用的回答
-- [ ] 提问文档中不存在的内容，返回“未找到依据”，不调用 LLM
-- [ ] 重启服务后索引仍可用
-- [ ] Docker Compose 一键启动
-- [ ] 完成一次完整演示
+- [x] 上传 md / pdf / doc / docx / txt 各一份，均能索引成功（`tests/test_v1_integration.py` 使用真实上传文件；DOC 使用项目支持的本地 fixture，PDF/DOCX 使用真实 Docling 解析）
+- [x] 文档状态从 uploaded 变为 ready
+- [x] 用文档中的事实提问，获得带引用的回答
+- [x] 提问文档中不存在的内容，返回“未找到依据”，不调用 LLM
+- [x] 重启服务后索引仍可用（集成测试重建应用并复用持久化 SQLite 数据库）
+- [x] Docker Compose 一键启动（镜像构建成功，`app` 与 `postgres` 均为 healthy，`/health` 返回 `{"status":"ok"}`）
+- [ ] 完成一次完整演示(使用实际对应的api_key)
+
+验收测试命令：
+
+```powershell
+.venv\Scripts\python.exe -B -m pytest -q tests/test_v1_integration.py
+.venv\Scripts\python.exe -B -m pytest -q
+.venv\Scripts\python.exe -B -m compileall app tests
+docker compose config
+```
 
 ---
 
