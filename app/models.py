@@ -3,11 +3,28 @@
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy import BigInteger, DateTime, ForeignKey, Integer, JSON, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.types import Uuid
+from sqlalchemy.types import Uuid, TypeDecorator
+
+from app.config import settings
 
 from app.database import Base
+
+
+class EmbeddingType(TypeDecorator[list[float]]):
+    """PostgreSQL 使用 pgvector，SQLite 测试使用 JSON 保存向量。"""
+
+    impl = JSON
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect):
+        """按数据库方言选择向量列实现。"""
+        if dialect.name == "postgresql":
+            from pgvector.sqlalchemy import Vector
+
+            return dialect.type_descriptor(Vector(settings.qwen_embedding_dimension))
+        return dialect.type_descriptor(JSON())
 
 
 class User(Base):
@@ -81,5 +98,6 @@ class DocumentChunk(Base):
     content: Mapped[str] = mapped_column(Text)
     parent_content: Mapped[str | None] = mapped_column(Text, nullable=True)
     token_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    embedding: Mapped[list[float] | None] = mapped_column(EmbeddingType(), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     document: Mapped[Document] = relationship(back_populates="chunks")
