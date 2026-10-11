@@ -15,7 +15,7 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.database import Base, get_db
+from app.core.database import Base, get_db
 from app.main import create_app
 from app.models import QAMessage, QAReference
 from app.services.generation import GenerationResult, NO_EVIDENCE_ANSWER
