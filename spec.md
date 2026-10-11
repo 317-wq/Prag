@@ -350,16 +350,18 @@ uploaded → parsing → indexing → ready
 
 ### 6.8 Prompt 与回答生成
 
-- [ ] 定义系统 Prompt
-- [ ] 定义上下文拼接格式
-- [ ] 约束模型只能依据上下文回答
-- [ ] 约束无法确认时返回“文档中没有足够依据”
-- [ ] 约束模型不伪造引用
-- [ ] 封装 GPT 调用客户端
-- [ ] 配置超时和一次重试
-- [ ] 处理调用失败，返回统一提示
-- [ ] 编写 Prompt 和生成测试
-- [ ] 记录上下文 token 数、LLM 耗时、是否重试
+- [x] 定义系统 Prompt
+- [x] 定义上下文拼接格式
+- [x] 约束模型只能依据上下文回答
+- [x] 约束无法确认时返回“文档中没有足够依据”
+- [x] 约束模型不伪造引用
+- [x] 封装 GPT 调用客户端
+- [x] 配置超时和一次重试
+- [x] 处理调用失败，返回统一提示
+- [x] 编写 Prompt 和生成测试
+- [x] 记录上下文 token 数、LLM 耗时、是否重试
+
+完成说明：已新增 `AnswerGenerator` 和 `GPTClient`，支持带编号引用的上下文拼接、仅依据上下文回答、无检索依据短路、OpenAI 兼容 GPT 调用、一次重试和统一失败提示；新增 GPT 超时、重试次数、重试间隔和 token 估算配置。生成日志记录上下文 token 数、LLM 耗时和是否重试。虚拟环境测试结果为 `37 passed, 2 warnings`。
 
 ### 6.9 引用生成
 
@@ -511,168 +513,3 @@ uploaded → parsing → indexing → ready
 16. [ ] V2 按模块迭代
 
 ---
-
-## 10. 每次开发任务的完成记录
-
-```markdown
-### 核心实体数据库定义
-
-- [√] `users`
-- [√] `knowledge_bases`
-- [√] `documents`
-- [√] `document_chunks`，包含 `VECTOR(1024)`
-- [√] `qa_messages`
-- [√] `qa_references`
-- [√] `processing_jobs`
-- [√] `qa_sessions`（V2）
-
-实现说明：
-- 修改文件：`spec.md`
-- 已有依据：`init.sql` 已包含上述 8 张表的建表语句、主键、外键和相关约束
-- 说明：本次确认的是数据库实体定义，不代表应用层 CRUD 或业务流程已经实现
-- 完成日期：2026-10-10
-
-### 字段约定核对
-
-- [√] `email` 使用 CITEXT 或统一转小写
-- [√] `password_hash` 使用 bcrypt
-- [ ] `domain_label` 统一小写，V1 固定 `general`
-- [√] `embedding` 保持 `VECTOR(1024)`，换模型时重建列
-- [ ] 文档重新处理时，先删旧 chunk 再写新 chunk
-
-实现说明：
-- 修改文件：`spec.md`
-- 已有依据：`init.sql` 中 `users.email` 定义为 `CITEXT`，`document_chunks.embedding` 定义为 `VECTOR(1024)`
-- 未勾选项：bcrypt、`domain_label` 统一小写和文档重新处理流程均需要应用层代码，目前处于环境配置阶段，暂不实现
-- 完成日期：2026-10-11
-
-### 日志字段和格式约定
-
-- [√] 定义日志字段和格式
-- [ ] 配置 Loguru 输出到 `data/logs/app.log`
-- [ ] 用 InterceptHandler 桥接标准库日志（Uvicorn、SQLAlchemy）
-- [ ] 敏感信息（API Key、密码）不写入日志
-- [√] 定义日志级别使用规则
-
-实现说明：
-- 修改文件：`spec.md`
-- 已有依据：第 5.4 节已定义 Loguru、JSON 格式、日志文件路径、日志字段及 INFO / WARNING / ERROR 的使用规则
-- 未勾选项：日志输出、标准库桥接和敏感信息脱敏需要应用层代码，目前处于环境配置阶段，暂不实现
-- 完成日期：2026-10-11
-
-### 基础配置与应用启动
-
-- [√] 实现配置加载（`app/config.py`）
-- [√] 实现必填环境变量校验
-- [√] 实现 FastAPI 应用入口（`app/main.py`）
-- [√] 配置统一异常处理
-- [√] 配置请求 ID 和结构化日志
-- [√] 实现 `/health`
-- [√] 配置前端静态资源托管
-- [√] 验证启动成功、API 文档可访问
-- [√] 配置 Loguru 输出到 `data/logs/app.log`
-
-实现说明：
-- 修改文件：`app/config.py`、`app/main.py`、`app/api/health.py`、`frontend/index.html`、`tests/test_app_startup.py`、`spec.md`
-- 配置加载：使用 `pydantic-settings` 读取 `.env` 和环境变量，集中定义数据库、上传、模型、检索、日志配置
-- 必填校验：启动前可校验 `DATABASE_URL`、`QWEN_API_KEY`、`GPT_API_KEY`，错误信息只输出变量名，不输出密钥值
-- 应用入口：创建 FastAPI 实例，挂载健康检查路由和前端静态资源
-- 日志：Loguru 同时输出终端和 `data/logs/app.log`，文件日志为 JSON，标准库日志通过 `InterceptHandler` 转发
-- 测试：新增配置缺失、`/health` 和前端首页静态资源测试
-- 验证：已运行 Pytest、compileall，并启动 Uvicorn 验证 `/health` 返回 `ok`、`/docs` 返回 200
-- 完成日期：2026-10-11
-
-### 用户注册与登录
-
-- [√] 实现用户注册接口（邮箱 + 密码）
-- [√] 密码 bcrypt 哈希存储
-- [√] 注册时自动创建默认知识库
-- [√] 实现登录接口，返回 JWT
-- [√] 实现退出接口
-- [√] 实现认证依赖，保护后续接口
-- [√] 校验邮箱唯一
-- [√] 编写注册、登录、鉴权测试
-- [√] 记录注册、登录成功/失败日志，登录失败不记录密码
-
-实现说明：
-- 修改文件：`app/api/auth.py`、`app/database.py`、`app/models.py`、`app/config.py`、`app/main.py`、`tests/test_auth.py`、`tests/test_app_startup.py`、`.env.example`、`requirements.txt`、`spec.md`
-- 注册接口：`POST /auth/register`，邮箱统一小写，密码使用 bcrypt 哈希，成功后创建“默认知识库”
-- 登录接口：`POST /auth/login`，校验邮箱和密码，返回 Bearer JWT
-- 退出接口：`POST /auth/logout`，要求认证，用于客户端丢弃无状态 JWT
-- 认证依赖：`get_current_user` 解析 Bearer JWT 并加载 active 用户，`GET /auth/me` 用于验证认证状态
-- 安全说明：响应和日志不输出明文密码；登录失败统一返回“邮箱或密码错误”
-- 测试：覆盖注册、默认知识库、bcrypt 哈希、邮箱唯一、错误登录、JWT 登录、退出和认证依赖
-- 完成日期：2026-10-11
-
-### 文件上传与文档管理
-
-- [√] 实现单文件上传
-- [√] 实现批量上传
-- [√] 校验扩展名白名单：md、pdf、doc、docx、txt
-- [√] 校验文件大小 ≤ 20MB
-- [√] 校验文件内容不为空
-- [√] 文件名安全处理
-- [√] 保存原始文件到 `UPLOAD_DIR`
-- [√] 创建 `documents` 记录，状态 `uploaded`
-- [√] 通过 BackgroundTasks 触发处理链
-- [√] 实现文档列表查询
-- [√] 实现文档详情查询
-- [√] 实现文档删除（含 chunk 和向量记录）
-- [√] 实现文档重新处理
-- [√] 单个文件失败不阻塞批量中的其他文件
-- [√] 编写上传、校验、删除测试
-- [√] 记录上传文件名、大小、校验结果；删除和重新处理记录文档 ID
-
-实现说明：
-- 修改文件：`app/api/documents.py`、`app/models.py`、`app/main.py`、`tests/test_documents.py`、`requirements.txt`、`spec.md`
-- 上传接口：`POST /documents/upload` 和 `POST /documents/batch-upload`，使用认证用户默认知识库
-- 校验规则：扩展名白名单、大小限制、非空内容和文件名安全处理
-- 存储规则：原始文件保存到 `UPLOAD_DIR/{user_id}/{document_id}/{filename}`，文档记录状态为 `uploaded`
-- 管理接口：`GET /documents`、`GET /documents/{document_id}`、`DELETE /documents/{document_id}`、`POST /documents/{document_id}/reprocess`
-- 删除与重处理：删除文档时清理原始文件和 chunks；重处理时清理旧 chunks 并重新触发后台处理占位任务
-- 测试：覆盖单文件上传、列表、详情、上传校验、批量失败隔离、删除和重新处理
-- 完成日期：2026-10-11
-
-### 多格式文档解析
-
-- [√] 封装 DoclingReader
-- [√] 实现按扩展名路由的 Loader
-- [√] 支持 md、pdf、doc、docx、txt
-- [√] 提取标题、页码、章节等位置信息
-- [√] 扫描版 PDF 明确返回“暂不支持 OCR”
-- [√] 解析失败写入 `parse_error`
-- [√] 编写各格式解析单元测试
-- [√] 记录解析耗时、chunk 数量；失败记录 parse_error
-
-实现说明：
-- 修改文件：`app/parsers/__init__.py`、`app/parsers/document_loader.py`、`app/api/documents.py`、`tests/test_document_loader.py`、`spec.md`
-- 解析入口：`DocumentLoader.parse()` 按扩展名路由 md、txt 和 DoclingReader 支持格式
-- 文本格式：md/txt 提取标题、章节和起始行号；md 按标题拆分章节
-- Docling 格式：pdf/doc/docx 通过 DoclingReader 读取文本，并提取标题、页码、章节等 metadata
-- OCR 限制：扫描版 PDF 未解析出文本时返回 `扫描版 PDF 暂不支持 OCR`
-- 失败处理：`parse_document_record()` 将文档状态置为 `failed` 并写入 `parse_error`
-- 日志：记录解析耗时、chunk 数量；失败记录 `parse_error`
-- 测试：覆盖 md、txt、pdf、doc、docx、扫描版 PDF 和 parse_error 写入
-- 完成日期：2026-10-11
-
-### 文本清洗与分块
-
-- [√] 清理无意义空白和重复换行
-- [√] 保留标题、章节、页码边界
-- [√] 按段落优先切分
-- [√] 配置 chunk 最大长度和 overlap
-- [√] 为 chunk 添加 `document_id`、`chunk_index`、`parent_content`
-- [√] 编写分块单元测试
-- [√] 记录 chunk 数量、平均长度、耗时
-
-实现说明：
-- 修改文件：`app/parsers/schemas.py`、`app/parsers/text_chunker.py`、`app/parsers/document_loader.py`、`app/config.py`、`.env.example`、`tests/test_text_chunker.py`、`tests/test_document_loader.py`、`spec.md`
-- 配置项：新增 `CHUNK_MAX_LENGTH` 和 `CHUNK_OVERLAP`，本地 `.env` 已同步实际值但不提交
-- 清洗规则：压缩无意义空白、统一换行、合并重复空行并保留段落边界
-- 分块规则：优先按段落合并，超长段落按最大长度和 overlap 切分
-- 元数据：chunk 写入 `document_id`、`chunk_index`、`parent_content`，保留标题、章节、页码边界
-- 入库逻辑：解析成功后清理旧 chunks，再写入新的 `document_chunks`
-- 日志：记录 chunk 数量、平均长度和分块耗时
-- 测试：覆盖文本清洗、父级上下文、段落优先、overlap、非法配置和 chunk 入库
-- 完成日期：2026-10-11
-```
