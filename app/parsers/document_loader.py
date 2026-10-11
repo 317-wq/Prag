@@ -1,6 +1,5 @@
 """多格式文档解析 Loader 和 DoclingReader 封装。"""
 
-from dataclasses import dataclass, field
 from pathlib import Path
 from time import perf_counter
 
@@ -8,31 +7,14 @@ from llama_index.readers.docling import DoclingReader
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from app.models import Document
+from app.config import settings
+from app.models import Document, DocumentChunk
+from app.parsers.schemas import ParsedDocument, ParseResult
+from app.parsers.text_chunker import TextChunker
 
 SUPPORTED_PARSE_EXTENSIONS = {"md", "pdf", "doc", "docx", "txt"}
 OCR_UNSUPPORTED_MESSAGE = "扫描版 PDF 暂不支持 OCR"
 
-
-@dataclass
-class ParsedDocument:
-    """单个解析片段，包含文本和位置信息。"""
-
-    text: str
-    metadata: dict[str, str | int | None] = field(default_factory=dict)
-
-
-@dataclass
-class ParseResult:
-    """文档解析结果，包含片段、耗时和数量。"""
-
-    documents: list[ParsedDocument]
-    duration_ms: int
-
-    @property
-    def chunk_count(self) -> int:
-        """返回解析出的片段数量。"""
-        return len(self.documents)
 
 
 class DocumentParseError(Exception):
@@ -152,6 +134,21 @@ def parse_document_record(db: Session, document_id) -> ParseResult:
         db.commit()
         logger.bind(event="document_parse_failed", document_id=str(document.id), parse_error=str(error)).warning("document parse failed")
         raise
+    db.query(DocumentChunk).filter(DocumentChunk.document_id == document.id).delete(synchronize_session=False)
+    chunk_result = TextChunker(settings.chunk_max_length, settings.chunk_overlap).chunk(document.id, result.documents)
+    for chunk in chunk_result.chunks:
+        db.add(
+            DocumentChunk(
+                document_id=document.id,
+                knowledge_base_id=document.knowledge_base_id,
+                user_id=document.user_id,
+                domain_label=document.domain_label,
+                chunk_index=chunk.chunk_index,
+                content=chunk.content,
+                parent_content=chunk.parent_content,
+                token_count=len(chunk.content),
+            )
+        )
     document.status = "parsed"
     document.parse_error = None
     db.commit()
@@ -159,6 +156,9 @@ def parse_document_record(db: Session, document_id) -> ParseResult:
         event="document_parsed",
         document_id=str(document.id),
         duration_ms=result.duration_ms,
-        chunk_count=result.chunk_count,
+        parsed_chunk_count=result.chunk_count,
+        chunk_count=chunk_result.chunk_count,
+        average_length=chunk_result.average_length,
+        chunk_duration_ms=chunk_result.duration_ms,
     ).info("document parsed")
     return result
