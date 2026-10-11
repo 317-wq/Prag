@@ -102,6 +102,9 @@ def enqueue_document_processing(document_id: UUID) -> None:
         except SQLAlchemyError as error:
             logger.bind(event="document_processing_failed", document_id=str(document_id)).warning(str(error))
             return
+        except Exception as error:
+            logger.bind(event="document_processing_failed", document_id=str(document_id)).warning(str(error))
+            return
 
 
 def save_upload_file(file: UploadFile, content: bytes, db: Session, user: User, background_tasks: BackgroundTasks) -> Document:
