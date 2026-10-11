@@ -99,6 +99,7 @@ def persist_citations(
     references = [
         QAReference(
             qa_message_id=qa_message_id,
+            citation_number=citation.number,
             source_type=citation.source_type,
             document_id=citation.document_id,
             chunk_id=citation.chunk_id,
