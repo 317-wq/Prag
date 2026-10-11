@@ -322,15 +322,17 @@ uploaded → parsing → indexing → ready
 
 ### 6.6 Embedding 与向量索引
 
-- [ ] 封装 Qwen Embedding 客户端
-- [ ] 批量向量化，配置超时和重试
-- [ ] 校验返回维度为 1024
-- [ ] 写入 `document_chunks`，含向量和元数据
-- [ ] 更新 `documents.status = ready`
-- [ ] Embedding 失败标记 `failed`
-- [ ] 验证重启后可加载已有向量
-- [ ] 编写向量写入和维度校验测试
-- [ ] 记录批量大小、向量维度、耗时、失败重试次数
+- [x] 封装 Qwen Embedding 客户端
+- [x] 批量向量化，配置超时和重试
+- [x] 校验返回维度为 1024
+- [x] 写入 `document_chunks`，含向量和元数据
+- [x] 更新 `documents.status = ready`
+- [x] Embedding 失败标记 `failed`
+- [x] 验证重启后可加载已有向量
+- [x] 编写向量写入和维度校验测试
+- [x] 记录批量大小、向量维度、耗时、失败重试次数
+
+完成说明：已新增 OpenAI 兼容 Qwen Embedding 客户端、SQLite/pgvector 兼容向量字段及独立文档向量化入口；`python -B -m pytest -q` 通过，结果为 `28 passed, 2 warnings in 54.90s`；`python -B -m compileall app tests` 通过。
 
 ### 6.7 基础向量检索
 
@@ -498,8 +500,8 @@ uploaded → parsing → indexing → ready
 5. [x] 文件上传与文档状态管理
 6. [x] 五种格式文档解析
 7. [x] 文本清洗和分块
-8. [ ] Qwen Embedding 接入
-9. [ ] pgvector 向量索引
+8. [x] Qwen Embedding 接入
+9. [x] pgvector 向量索引
 10. [ ] 基础向量检索
 11. [ ] Prompt 与 LLM 生成
 12. [ ] 引用映射
