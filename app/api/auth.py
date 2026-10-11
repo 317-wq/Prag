@@ -13,8 +13,8 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.config import settings
-from app.database import get_db
+from app.core.config import settings
+from app.core.database import get_db
 from app.models import KnowledgeBase, User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
