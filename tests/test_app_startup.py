@@ -9,7 +9,7 @@ os.environ.setdefault("JWT_SECRET_KEY", "test-jwt-secret")
 
 from fastapi.testclient import TestClient
 
-from app.config import ConfigurationError, Settings
+from app.core.config import ConfigurationError, Settings
 from app.main import create_app
 
 
