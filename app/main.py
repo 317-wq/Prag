@@ -16,6 +16,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.staticfiles import StaticFiles
 
 from app.api.auth import router as auth_router
+from app.api.chat import router as chat_router
 from app.api.documents import router as documents_router
 from app.api.health import router as health_router
 from app.config import ConfigurationError, settings
@@ -100,6 +101,7 @@ def create_app() -> FastAPI:
     application.add_middleware(RequestContextMiddleware)
     application.include_router(health_router)
     application.include_router(auth_router)
+    application.include_router(chat_router)
     application.include_router(documents_router)
 
     frontend_dir = Path(__file__).resolve().parent.parent / "frontend"
