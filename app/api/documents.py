@@ -16,6 +16,7 @@ from app.config import settings
 from app.database import get_db
 from app.models import Document, DocumentChunk, KnowledgeBase, User
 from app.parsers.document_loader import DocumentParseError, parse_document_record
+from app.services.embedding import embed_document_record
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -97,6 +98,7 @@ def enqueue_document_processing(document_id: UUID) -> None:
     with session_factory() as session:
         try:
             parse_document_record(session, document_id)
+            embed_document_record(session, document_id)
         except DocumentParseError:
             return
         except SQLAlchemyError as error:
