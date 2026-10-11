@@ -48,6 +48,8 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60
 
+    chunk_max_length: int = 1000
+    chunk_overlap: int = 100
     retrieval_top_k: int = 5
     retrieval_min_score: float = 0.3
     online_search_enabled: bool = False
