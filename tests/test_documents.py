@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+from types import SimpleNamespace
 from uuid import UUID, uuid4
 
 os.environ.setdefault("DATABASE_URL", "sqlite+pysqlite:///:memory:")
@@ -9,6 +10,7 @@ os.environ.setdefault("QWEN_API_KEY", "test-qwen-key")
 os.environ.setdefault("GPT_API_KEY", "test-gpt-key")
 os.environ.setdefault("JWT_SECRET_KEY", "test-jwt-secret")
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
@@ -18,6 +20,7 @@ from app.core.config import settings
 from app.core.database import Base, get_db
 from app.main import create_app
 from app.models import Document, DocumentChunk, KnowledgeBase, User
+from app.services.embedding import QwenEmbeddingClient
 
 
 def create_test_client(upload_dir: Path):
@@ -51,6 +54,36 @@ def register_and_login(client: TestClient) -> dict[str, str]:
     response = client.post("/auth/login", json=payload)
     token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture(autouse=True)
+def patch_embedding(monkeypatch):
+    """为文档 API 注入本地 fake embedding，禁止测试访问外部服务。"""
+    from app.api import documents as documents_api
+    from app.services.embedding import embed_document_record
+
+    class FakeEmbeddings:
+        """返回固定维度向量的测试 embedding 接口。"""
+
+        def create(self, **kwargs):
+            """为每个输入返回全零向量。"""
+            return SimpleNamespace(
+                data=[
+                    SimpleNamespace(index=index, embedding=[0.0] * settings.qwen_embedding_dimension)
+                    for index, _ in enumerate(kwargs["input"])
+                ]
+            )
+
+    class FakeClient:
+        """提供 fake embeddings 资源。"""
+
+        embeddings = FakeEmbeddings()
+
+    def embed_with_fake(db, document_id):
+        """使用 fake OpenAI 客户端完成真实向量化状态流转。"""
+        return embed_document_record(db, document_id, QwenEmbeddingClient(FakeClient()))
+
+    monkeypatch.setattr(documents_api, "embed_document_record", embed_with_fake)
 
 
 def test_upload_list_detail_and_saved_file(tmp_path):
@@ -167,8 +200,8 @@ def test_delete_removes_document_file_and_chunks(tmp_path):
         assert len(list(session.scalars(select(DocumentChunk)))) == 0
 
 
-def test_reprocess_clears_chunks_and_resets_status(tmp_path):
-    """重新处理文档时删除旧切片并将状态重置为 uploaded。"""
+def test_reprocess_clears_chunks_and_completes_processing(tmp_path):
+    """重新处理文档时删除旧切片并完成解析和向量化。"""
     client, session_factory = create_test_client(tmp_path)
     with client:
         headers = register_and_login(client)
@@ -201,4 +234,9 @@ def test_reprocess_clears_chunks_and_resets_status(tmp_path):
     assert response.json()["status"] == "uploaded"
     assert response.json()["parse_error"] is None
     with session_factory() as session:
-        assert len(list(session.scalars(select(DocumentChunk)))) == 0
+        document = session.get(Document, document_id)
+        chunks = list(session.scalars(select(DocumentChunk).where(DocumentChunk.document_id == document_id)))
+        assert document.status == "ready"
+        assert document.parse_error is None
+        assert len(chunks) == 1
+        assert chunks[0].embedding is not None
