@@ -9,7 +9,7 @@ from typing import Any
 from uuid import UUID
 
 from loguru import logger
-from sqlalchemy import Select, select
+from sqlalchemy import Float, Select, literal, select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -130,7 +130,17 @@ class VectorRetriever:
         min_score: float,
     ) -> list[RetrievalItem]:
         """使用 pgvector cosine distance 运算符查询切片。"""
-        similarity = (1 - DocumentChunk.embedding.cosine_distance(query_vector)).label("similarity")
+        from pgvector.sqlalchemy import Vector
+
+        query_vector_value = literal(
+            query_vector,
+            type_=Vector(settings.qwen_embedding_dimension),
+        )
+        cosine_distance = DocumentChunk.embedding.op(
+            "<=>",
+            return_type=Float,
+        )(query_vector_value)
+        similarity = (1 - cosine_distance).label("similarity")
         statement = (
             select(DocumentChunk, Document.filename, similarity)
             .join(Document, Document.id == DocumentChunk.document_id)
