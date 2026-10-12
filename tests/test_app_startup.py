@@ -14,8 +14,8 @@ from app.core.config import ConfigurationError, Settings
 from app.main import create_app
 
 
-def test_schema_compatibility_adds_missing_document_chunk_columns(monkeypatch):
-    """PostgreSQL 旧表结构会补齐文档切片元数据列。"""
+def test_schema_compatibility_adds_missing_columns(monkeypatch):
+    """PostgreSQL 旧表结构会补齐当前 ORM 使用的字段。"""
     executed_statements = []
 
     class FakeDialect:
@@ -46,6 +46,7 @@ def test_schema_compatibility_adds_missing_document_chunk_columns(monkeypatch):
         "ALTER TABLE document_chunks ADD COLUMN IF NOT EXISTS page_number INTEGER",
         "ALTER TABLE document_chunks ADD COLUMN IF NOT EXISTS section_title VARCHAR(500)",
         "ALTER TABLE document_chunks ADD COLUMN IF NOT EXISTS line_number INTEGER",
+        "ALTER TABLE qa_references ADD COLUMN IF NOT EXISTS citation_number INTEGER",
     ]
 
 
