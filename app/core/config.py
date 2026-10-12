@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     app_port: int = 8000
     log_level: str = "INFO"
     log_file_path: Path = Path("./data/logs/app.log")
+    timezone: str = Field(default="Asia/Shanghai", validation_alias="TZ")
 
     database_url: str = ""
     upload_dir: Path = Path("./data/uploads")
