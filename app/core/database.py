@@ -26,13 +26,14 @@ def get_session_factory():
 
 
 def ensure_schema_compatibility() -> None:
-    """补齐旧 PostgreSQL 数据卷缺失的文档切片元数据列。"""
+    """补齐旧 PostgreSQL 数据卷缺失的业务字段。"""
     if get_engine().dialect.name != "postgresql":
         return
     statements = (
         "ALTER TABLE document_chunks ADD COLUMN IF NOT EXISTS page_number INTEGER",
         "ALTER TABLE document_chunks ADD COLUMN IF NOT EXISTS section_title VARCHAR(500)",
         "ALTER TABLE document_chunks ADD COLUMN IF NOT EXISTS line_number INTEGER",
+        "ALTER TABLE qa_references ADD COLUMN IF NOT EXISTS citation_number INTEGER",
     )
     with get_engine().begin() as connection:
         for statement in statements:
