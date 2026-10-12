@@ -3,6 +3,7 @@
 import logging
 import sys
 from typing import Any
+from zoneinfo import ZoneInfo
 
 from loguru import logger
 
@@ -32,7 +33,8 @@ def _compact_format(record: dict[str, Any]) -> str:
     if len(message) > 160:
         message = message[:157] + "..."
     suffix = f" | {context}" if context else ""
-    return f"{record['time'].strftime('%Y-%m-%d %H:%M:%S')} {record['level'].name:<8} {source}:{line} {message}{suffix}\n"
+    timestamp = record["time"].astimezone(ZoneInfo(settings.timezone))
+    return f"{timestamp.strftime('%Y-%m-%d %H:%M:%S')} {record['level'].name:<8} {source}:{line} {message}{suffix}\n"
 
 
 def configure_logging() -> None:
@@ -51,7 +53,7 @@ def configure_logging() -> None:
         format=_compact_format,
         encoding="utf-8",
         enqueue=True,
-        rotation="10 MB",
+        rotation="00:00",
         retention="14 days",
     )
     logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
