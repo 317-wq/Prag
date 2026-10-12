@@ -1,7 +1,7 @@
 """精简日志格式测试。"""
 
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.core.logging import _compact_format
 
@@ -10,7 +10,7 @@ def test_compact_format_uses_second_precision_and_short_context():
     """日志只保留年月日时分秒、级别、消息和必要上下文。"""
     output = _compact_format(
         {
-            "time": datetime(2026, 10, 11, 12, 34, 56),
+            "time": datetime(2026, 10, 11, 12, 34, 56, tzinfo=timezone.utc),
             "level": type("Level", (), {"name": "INFO"})(),
             "message": "request completed",
             "file": type("File", (), {"name": "main.py"})(),
@@ -25,7 +25,7 @@ def test_compact_format_uses_second_precision_and_short_context():
         }
     )
 
-    assert re.match(r"^2026-10-11 12:34:56 INFO     main.py:45 request completed", output)
+    assert re.match(r"^2026-10-11 20:34:56 INFO     main.py:45 request completed", output)
     assert "event=http_request" in output
     assert "duration_ms" not in output
     assert "path" not in output
