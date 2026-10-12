@@ -8,7 +8,6 @@ from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Up
 from loguru import logger
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api.auth import CurrentUser
@@ -89,24 +88,58 @@ def build_storage_path(user_id: UUID, document_id: UUID, filename: str) -> Path:
     return directory / filename
 
 
-def enqueue_document_processing(document_id: UUID) -> None:
-    """触发文档解析处理链，失败时写入 parse_error。"""
+def enqueue_document_processing(document_id: UUID, db: Session | None = None) -> None:
+    """执行文档解析和向量化链路，失败时持久化失败状态并记录异常。"""
     from app.core.database import get_session_factory
 
     logger.bind(event="document_processing_enqueued", document_id=str(document_id)).info("document processing enqueued")
+    if db is not None:
+        _process_document(db, document_id)
+        return
     session_factory = get_session_factory()
     with session_factory() as session:
-        try:
-            parse_document_record(session, document_id)
-            embed_document_record(session, document_id)
-        except DocumentParseError:
-            return
-        except SQLAlchemyError as error:
-            logger.bind(event="document_processing_failed", document_id=str(document_id)).warning(str(error))
-            return
-        except Exception as error:
-            logger.bind(event="document_processing_failed", document_id=str(document_id)).warning(str(error))
-            return
+        _process_document(session, document_id)
+
+
+def _process_document(session: Session, document_id: UUID) -> None:
+    """在给定数据库会话中执行单个文档处理任务。"""
+    try:
+        parse_document_record(session, document_id)
+        embed_document_record(session, document_id)
+    except DocumentParseError:
+        logger.bind(event="document_processing_failed", document_id=str(document_id), status="failed").warning(
+            "document parse failed"
+        )
+    except Exception as error:
+        session.rollback()
+        document = session.get(Document, document_id)
+        if document is not None:
+            document.status = "failed"
+            document.parse_error = str(error)
+            session.commit()
+        logger.bind(event="document_processing_failed", document_id=str(document_id), status="failed").exception(
+            "document processing failed"
+        )
+
+
+def recover_unfinished_documents() -> None:
+    """应用启动时恢复 uploaded、parsing、indexing 状态的文档。"""
+    from app.core.database import get_session_factory
+
+    session_factory = get_session_factory()
+    try:
+        with session_factory() as session:
+            document_ids = list(
+                session.scalars(
+                    select(Document.id).where(Document.status.in_(("uploaded", "parsing", "indexing")))
+                )
+            )
+    except Exception:
+        logger.bind(event="document_recovery", status="failed").exception("document recovery query failed")
+        return
+
+    for document_id in document_ids:
+        enqueue_document_processing(document_id)
 
 
 def save_upload_file(file: UploadFile, content: bytes, db: Session, user: User, background_tasks: BackgroundTasks) -> Document:
@@ -132,7 +165,7 @@ def save_upload_file(file: UploadFile, content: bytes, db: Session, user: User, 
     knowledge_base.document_count += 1
     db.commit()
     db.refresh(document)
-    background_tasks.add_task(enqueue_document_processing, document.id)
+    background_tasks.add_task(enqueue_document_processing, document.id, db)
     logger.bind(event="document_uploaded", filename=safe_name, file_size=file_size, status="success").info("document uploaded")
     return document
 
@@ -219,6 +252,6 @@ def reprocess_document(
     document.processed_at = None
     db.commit()
     db.refresh(document)
-    background_tasks.add_task(enqueue_document_processing, document.id)
+    background_tasks.add_task(enqueue_document_processing, document.id, db)
     logger.bind(event="document_reprocess", document_id=str(document_id), status="success").info("document reprocess requested")
     return document
