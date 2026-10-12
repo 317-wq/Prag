@@ -194,12 +194,13 @@
 - 对话历史和多轮追问需要支持，但放在 V2 实现。
 - 首期部署规模按约 20 名用户考虑，单个文档大小上限为 20MB。
 
-## 9. 技术约束
+## 9. 技术栈
 
 以下技术选型为强制约束，开发过程中不得随意替换。
 
 - 前端：html + css + js
 - 后端：Python + FastAPI
+- ORM：SQLAlchemy 2.0
 - 文档解析：Docling
 - RAG框架：LlamaIndex
 - 向量数据库：pgvector 
