@@ -8,7 +8,8 @@ os.environ.setdefault("QWEN_API_KEY", "test-qwen-key")
 os.environ.setdefault("GPT_API_KEY", "test-gpt-key")
 os.environ.setdefault("JWT_SECRET_KEY", "test-jwt-secret")
 
-from sqlalchemy import create_engine
+from sqlalchemy import Float, create_engine, literal, select
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -92,6 +93,19 @@ def add_document(
     session.add(chunk)
     session.flush()
     return chunk
+
+
+def test_postgresql_retrieval_uses_pgvector_cosine_operator():
+    """PostgreSQL 检索使用 pgvector 原生余弦距离运算符。"""
+    query_vector = [1.0] + [0.0] * 1023
+    from pgvector.sqlalchemy import Vector
+
+    query_vector_value = literal(query_vector, type_=Vector(settings.qwen_embedding_dimension))
+    cosine_distance = DocumentChunk.embedding.op("<=>", return_type=Float)(query_vector_value)
+    statement = select((1 - cosine_distance).label("similarity"))
+    compiled = statement.compile(dialect=postgresql.dialect())
+
+    assert "<=>" in str(compiled)
 
 
 def test_retrieval_returns_filtered_results_in_similarity_order():
