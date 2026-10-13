@@ -28,9 +28,11 @@ class FakeEmbeddings:
         self.vectors = vectors
         self.failures = failures
         self.inputs: list[list[str]] = []
+        self.calls: list[dict] = []
 
     def create(self, **kwargs):
         """按输入生成带 index 的模拟响应。"""
+        self.calls.append(kwargs)
         self.inputs.append(kwargs["input"])
         if self.failures:
             self.failures -= 1
@@ -96,8 +98,8 @@ def create_document(session, chunk_count: int = 3) -> Document:
     return document
 
 
-def test_embedding_client_batches_and_keeps_input_order():
-    """客户端按批次调用，并按返回 index 恢复输入顺序。"""
+def test_embedding_client_uses_flash_model_and_keeps_input_order():
+    """客户端使用 flash 向量模型，并按返回 index 恢复输入顺序。"""
     original_batch_size = settings.qwen_embedding_batch_size
     settings.qwen_embedding_batch_size = 2
     try:
@@ -108,6 +110,7 @@ def test_embedding_client_batches_and_keeps_input_order():
         settings.qwen_embedding_batch_size = original_batch_size
 
     assert embeddings.inputs == [["first", "second"]]
+    assert embeddings.calls[0]["model"] == settings.qwen_embedding_model_flash
     assert vectors[0][0] == 1.0
     assert len(vectors[0]) == settings.qwen_embedding_dimension
 

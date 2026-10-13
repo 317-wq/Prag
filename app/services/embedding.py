@@ -43,7 +43,7 @@ class QwenEmbeddingClient:
         for attempt in range(settings.qwen_embedding_max_retries + 1):
             try:
                 response = self.client.embeddings.create(
-                    model=settings.qwen_embedding_model,
+                    model=settings.qwen_embedding_model_flash,
                     input=list(texts),
                     dimensions=settings.qwen_embedding_dimension,
                     timeout=settings.qwen_embedding_timeout_seconds,
