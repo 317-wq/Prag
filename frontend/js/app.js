@@ -25,6 +25,97 @@
   const errorMessage = (detail) =>
     Array.isArray(detail) ? "请检查填写内容" : (detail || "请求未完成，请稍后再试");
 
+  function renderInlineMarkdown(text) {
+    return escapeHtml(text)
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/\[([^\]]+)]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer">$1</a>');
+  }
+
+  function renderMarkdownTable(lines, startIndex) {
+    const rows = [];
+    let index = startIndex;
+
+    while (index < lines.length && /^\s*\|.*\|\s*$/.test(lines[index])) {
+      rows.push(lines[index].trim());
+      index += 1;
+    }
+
+    const hasDivider = rows.length > 1 && /^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(rows[1]);
+    if (rows.length < 2 || !hasDivider) {
+      return null;
+    }
+
+    const cells = (row) => row.replace(/^\||\|$/g, "").split("|").map((cell) => cell.trim());
+    const headers = cells(rows[0]);
+    const bodyRows = rows.slice(2).map(cells);
+    const head = headers.map((cell) => `<th>${renderInlineMarkdown(cell)}</th>`).join("");
+    const body = bodyRows
+      .map((row) => `<tr>${row.map((cell) => `<td>${renderInlineMarkdown(cell)}</td>`).join("")}</tr>`)
+      .join("");
+
+    return {
+      html: `<div class="markdown-table-wrap"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`,
+      nextIndex: index
+    };
+  }
+
+  function renderMarkdown(markdown) {
+    const lines = String(markdown || "").replace(/\r\n/g, "\n").split("\n");
+    const blocks = [];
+    let paragraph = [];
+
+    const flushParagraph = () => {
+      if (!paragraph.length) {
+        return;
+      }
+      blocks.push(`<p>${renderInlineMarkdown(paragraph.join("\n")).replace(/\n/g, "<br>")}</p>`);
+      paragraph = [];
+    };
+
+    for (let index = 0; index < lines.length;) {
+      const line = lines[index];
+      const heading = line.match(/^(#{1,6})\s+(.+)$/);
+      const listItem = line.match(/^\s*[-*]\s+(.+)$/);
+      const orderedItem = line.match(/^\s*\d+\.\s+(.+)$/);
+      const table = renderMarkdownTable(lines, index);
+
+      if (!line.trim()) {
+        flushParagraph();
+        index += 1;
+      } else if (table) {
+        flushParagraph();
+        blocks.push(table.html);
+        index = table.nextIndex;
+      } else if (heading) {
+        flushParagraph();
+        const level = Math.min(heading[1].length + 2, 6);
+        blocks.push(`<h${level}>${renderInlineMarkdown(heading[2])}</h${level}>`);
+        index += 1;
+      } else if (listItem || orderedItem) {
+        const ordered = Boolean(orderedItem);
+        const tag = ordered ? "ol" : "ul";
+        const items = [];
+        while (index < lines.length) {
+          const current = lines[index].match(ordered ? /^\s*\d+\.\s+(.+)$/ : /^\s*[-*]\s+(.+)$/);
+          if (!current) {
+            break;
+          }
+          items.push(`<li>${renderInlineMarkdown(current[1])}</li>`);
+          index += 1;
+        }
+        flushParagraph();
+        blocks.push(`<${tag}>${items.join("")}</${tag}>`);
+      } else {
+        paragraph.push(line);
+        index += 1;
+      }
+    }
+
+    flushParagraph();
+    return blocks.join("");
+  }
+
   async function request(path, options = {}) {
     const response = await fetch(path, {
       ...options,
@@ -64,14 +155,37 @@
     state.token = null;
     state.user = null;
     localStorage.removeItem("prag_token");
-    $("#workspace-view").classList.add("is-hidden");
-    $("#auth-view").classList.remove("is-hidden");
+    const workspace = $("#workspace-view");
+    const authView = $("#auth-view");
+    const landingView = $("#landing-view");
+    if (workspace) {
+      workspace.classList.add("is-hidden");
+    }
+    if (authView) {
+      authView.classList.remove("is-hidden");
+    } else if (landingView) {
+      landingView.classList.remove("is-hidden");
+    } else if (!["/", "/login.html", "/register.html"].includes(window.location.pathname)) {
+      window.location.href = "/login.html";
+    }
   }
 
   function showWorkspace(user) {
+    const workspace = $("#workspace-view");
+    const authView = $("#auth-view");
+    const landingView = $("#landing-view");
+    if (!workspace) {
+      window.location.href = "/";
+      return;
+    }
     state.user = user;
-    $("#auth-view").classList.add("is-hidden");
-    $("#workspace-view").classList.remove("is-hidden");
+    if (authView) {
+      authView.classList.add("is-hidden");
+    }
+    if (landingView) {
+      landingView.classList.add("is-hidden");
+    }
+    workspace.classList.remove("is-hidden");
     $("#account-email").textContent = user.email;
     $("#account-nickname").textContent = user.nickname || "未设置";
   }
@@ -84,12 +198,18 @@
     state.authMode = state.authMode === "login" ? "register" : "login";
     const register = state.authMode === "register";
     $("#auth-mode-label").textContent = register ? "创建你的工作台" : "欢迎回来";
-    $("#auth-toggle").textContent = register ? "已有账号？登录" : "注册新账号";
     $("#auth-submit").textContent = register ? "创建并进入" : "登录工作台";
     $("#confirm-password-field").classList.toggle("is-hidden", !register);
     $("#nickname-field").classList.toggle("is-hidden", !register);
     $("#auth-password").autocomplete = register ? "new-password" : "current-password";
     setAuthError("");
+  }
+
+  function focusAuthForm(mode) {
+    if (mode !== state.authMode) {
+      toggleAuthMode();
+    }
+    $("#auth-email").focus();
   }
 
   async function submitAuth(event) {
@@ -162,13 +282,13 @@
 
     const citations = (result.citations || [])
       .map((citation) =>
-        `<details class="citation"><summary>[${citation.number}] ${escapeHtml(citation.document_name)} · ${citation.page_number ? `第 ${citation.page_number} 页` : `第 ${citation.chunk_index + 1} 段`}</summary><p>${escapeHtml(citation.snippet)}</p></details>`
+        `<details class="citation"><summary>[${citation.number}] ${escapeHtml(citation.document_name)} · ${citation.page_number ? `第 ${citation.page_number} 页` : `第 ${citation.chunk_index + 1} 段`}</summary><div class="citation-snippet markdown-body">${renderMarkdown(citation.snippet)}</div></details>`
       )
       .join("");
 
     $("#messages").insertAdjacentHTML(
       "beforeend",
-      `<article class="message assistant"><div class="message-bubble">${escapeHtml(result.answer)}</div><div class="confidence ${low ? "low" : ""}">置信度 ${confidence}% · 命中 ${result.retrieval_hit_count} 条依据</div>${low ? `<div class="evidence-warning">文档中没有足够依据，建议补充资料后再问。</div>` : ""}${citations ? `<div class="citations">${citations}</div>` : ""}</article>`
+      `<article class="message assistant"><div class="message-bubble markdown-body">${renderMarkdown(result.answer)}</div><div class="confidence ${low ? "low" : ""}">置信度 ${confidence}% · 命中 ${result.retrieval_hit_count} 条依据</div>${low ? `<div class="evidence-warning">文档中没有足够依据，建议补充资料后再问。</div>` : ""}${citations ? `<div class="citations">${citations}</div>` : ""}</article>`
     );
 
     $("#messages").lastElementChild.scrollIntoView({
@@ -386,27 +506,52 @@
   }
 
   async function boot() {
-    $("#auth-form").addEventListener("submit", submitAuth);
-    $("#auth-toggle").addEventListener("click", toggleAuthMode);
-    $("#chat-form").addEventListener("submit", submitChat);
-    $("#file-input").addEventListener("change", uploadDocuments);
-    $("#documents-list").addEventListener("click", documentAction);
-    $("#password-form").addEventListener("submit", changePassword);
-    $("#logout-button").addEventListener("click", logout);
-    $("#menu-button").addEventListener("click", () =>
-      $("#workspace-view").classList.toggle("menu-open")
-    );
+    const authForm = $("#auth-form");
+    if (authForm) {
+      state.authMode = window.location.pathname === "/register.html" ? "register" : "login";
+      authForm.addEventListener("submit", submitAuth);
+    }
+
+    const chatForm = $("#chat-form");
+    if (chatForm) {
+      chatForm.addEventListener("submit", submitChat);
+    }
+    const fileInput = $("#file-input");
+    if (fileInput) {
+      fileInput.addEventListener("change", uploadDocuments);
+    }
+    const documentsList = $("#documents-list");
+    if (documentsList) {
+      documentsList.addEventListener("click", documentAction);
+    }
+    const passwordForm = $("#password-form");
+    if (passwordForm) {
+      passwordForm.addEventListener("submit", changePassword);
+    }
+    const logoutButton = $("#logout-button");
+    if (logoutButton) {
+      logoutButton.addEventListener("click", logout);
+    }
+    const menuButton = $("#menu-button");
+    if (menuButton) {
+      menuButton.addEventListener("click", () =>
+        $("#workspace-view").classList.toggle("menu-open")
+      );
+    }
 
     document.querySelectorAll(".nav-item").forEach((item) => {
       item.addEventListener("click", () => switchView(item.dataset.view));
     });
 
-    $("#question-input").addEventListener("keydown", (event) => {
-      if (event.key === "Enter" && !event.shiftKey) {
-        event.preventDefault();
-        $("#chat-form").requestSubmit();
-      }
-    });
+    const questionInput = $("#question-input");
+    if (questionInput) {
+      questionInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && !event.shiftKey) {
+          event.preventDefault();
+          $("#chat-form").requestSubmit();
+        }
+      });
+    }
 
     if (state.token) {
       try {

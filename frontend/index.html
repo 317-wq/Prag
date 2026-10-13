@@ -6,75 +6,64 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#102b3f">
   <title>Prag｜知识工作台</title>
-  <link rel="stylesheet" href="/static/css/app.css">
+  <link rel="stylesheet" href="/static/css/app.css?v=hero-v2">
 </head>
 <body>
   <div id="app" class="app-shell">
-    <section id="auth-view" class="auth-view" aria-labelledby="auth-title">
-      <div class="auth-intro">
-        <p class="eyebrow">PRAG / KNOWLEDGE DESK</p>
-        <h1 id="auth-title">
-          把散落的资料，
-          <em>变成可追溯的答案。</em>
-        </h1>
-        <p>上传你的文档，和有证据的知识对话。每个回答都告诉你，它来自哪里。</p>
-      </div>
-
-      <form id="auth-form" class="auth-form" novalidate>
-        <div class="form-heading">
-          <span id="auth-mode-label">欢迎回来</span>
-          <button type="button" id="auth-toggle" class="text-button">注册新账号</button>
+    <main id="landing-view" class="landing-page">
+      <header class="landing-topbar">
+        <a class="landing-brand" href="/" aria-label="Prag 首页">
+          <span class="landing-mark">P</span>
+        </a>
+        <nav class="landing-nav" aria-label="产品导航">
+          <a href="#how-it-works">工作方式</a>
+          <a href="#for-teams">适合团队</a>
+          <a href="#landing-footer">开始使用</a>
+        </nav>
+        <div class="landing-actions">
+          <a class="landing-login" href="/login.html">登录</a>
+          <a class="primary-button landing-register" href="/register.html">免费注册</a>
         </div>
-        <label>
-          邮箱
-          <input
-            id="auth-email"
-            name="email"
-            type="email"
-            autocomplete="email"
-            required
-            placeholder="name@example.com"
-          >
-        </label>
-        <label>
-          密码
-          <input
-            id="auth-password"
-            name="password"
-            type="password"
-            autocomplete="current-password"
-            minlength="8"
-            required
-            placeholder="至少 8 位字符"
-          >
-        </label>
-        <label id="confirm-password-field" class="is-hidden">
-          确认密码
-          <input
-            id="auth-confirm-password"
-            name="confirm-password"
-            type="password"
-            autocomplete="new-password"
-            minlength="8"
-            required
-            placeholder="请再次输入密码"
-          >
-        </label>
-        <label id="nickname-field" class="is-hidden">
-          称呼
-          <input
-            id="auth-nickname"
-            name="nickname"
-            type="text"
-            autocomplete="nickname"
-            maxlength="100"
-            placeholder="怎么称呼你？"
-          >
-        </label>
-        <button class="primary-button full-width" type="submit" id="auth-submit">登录工作台</button>
-        <p id="auth-error" class="form-error" role="alert"></p>
-      </form>
-    </section>
+      </header>
+
+      <section class="landing-hero" aria-labelledby="landing-title">
+        <div class="auth-hero-glow auth-hero-glow-a" aria-hidden="true"></div>
+        <div class="auth-hero-glow auth-hero-glow-b" aria-hidden="true"></div>
+        <div class="auth-hero-grid" aria-hidden="true"></div>
+        <div class="landing-hero-copy">
+          <h1 id="landing-title">让每一份文档<br>都成为<em>模型的记忆</em></h1>
+          <p>把散落在各处的资料接进检索链路，让每一次回答都有证据、有出处，不再只是猜。</p>
+          <div class="landing-hero-actions">
+            <a class="primary-button" href="/register.html">建立我的知识库</a>
+            <a class="landing-text-link" href="#how-it-works">了解工作方式 <span>↓</span></a>
+          </div>
+        </div>
+        <div class="landing-hero-note" aria-label="产品概览">
+          <span class="landing-note-mark">P</span>
+          <strong>你的资料，<br>你的答案。</strong>
+          <small>每一次回答都能追溯到来源。</small>
+        </div>
+      </section>
+
+      <section id="how-it-works" class="landing-section landing-section-light">
+        <div class="landing-section-intro">
+          <span class="section-kicker">从资料到答案</span>
+          <h2>让知识保持在<br><em>可被找到</em>的地方</h2>
+        </div>
+        <div class="landing-process">
+          <article><b>01</b><h3>放入资料</h3><p>上传项目文档、规范和手册，建立属于你的资料库。</p></article>
+          <article><b>02</b><h3>自动理解</h3><p>系统解析并索引内容，保留章节和原始上下文。</p></article>
+          <article><b>03</b><h3>带证据回答</h3><p>每个回答都回到你的资料中寻找依据，而不是凭空生成。</p></article>
+        </div>
+      </section>
+
+      <section id="for-teams" class="landing-section landing-section-tint">
+        <div class="landing-feature-copy"><span class="section-kicker">为真实工作而做</span><h2>少一点翻找，<br>多一点确定。</h2><p>Prag 把团队每天反复查找的内容，变成一个可以直接提问的工作入口。你不需要记住文件在哪，只需要知道自己要解决什么。</p><a class="landing-text-link" href="/register.html">开始使用 <span>↗</span></a></div>
+        <div class="landing-feature-orbit" aria-hidden="true"><span>文档</span><span>检索</span><span>回答</span><strong>P</strong></div>
+      </section>
+
+      <footer id="landing-footer" class="landing-footer"><span>Prag</span><small>把知识留在每一次回答里。</small><a href="/login.html">登录工作台</a></footer>
+    </main>
 
     <section id="workspace-view" class="workspace-view is-hidden">
       <aside class="sidebar">
@@ -142,11 +131,9 @@
               placeholder="向你的知识库提问……"
               aria-label="问题"
             ></textarea>
-            <div class="composer-footer">
-              <button id="send-button" class="primary-button" type="submit">
-                发送 <span>↗</span>
-              </button>
-            </div>
+            <button id="send-button" class="primary-button composer-send" type="submit" aria-label="发送问题">
+              发送 <span>↗</span>
+            </button>
           </form>
         </section>
 
